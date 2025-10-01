@@ -1,11 +1,11 @@
-import  { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import * as THREE from 'three';
 
 const HeroSection = () => {
   const [location, setLocation] = useState('');
   const [product, setProduct] = useState('');
   const [isVisible, setIsVisible] = useState(false);
-  const canvasRef = useRef(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     setIsVisible(true);
@@ -16,17 +16,17 @@ const HeroSection = () => {
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer({ 
-      canvas: canvasRef.current, 
+    const renderer = new THREE.WebGLRenderer({
+      canvas: canvasRef.current,
       alpha: true,
-      antialias: true 
+      antialias: true,
     });
-    
+
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     camera.position.z = 5;
 
-    const shapes = [];
+    const shapes: THREE.Mesh[] = [];
     const geometries = [
       new THREE.SphereGeometry(0.3, 32, 32),
       new THREE.TetrahedronGeometry(0.3),
@@ -41,12 +41,12 @@ const HeroSection = () => {
         opacity: 0.4,
         shininess: 100,
       });
-      
+
       const mesh = new THREE.Mesh(geometry, material);
       mesh.position.x = (Math.random() - 0.5) * 10;
       mesh.position.y = (Math.random() - 0.5) * 10;
       mesh.position.z = (Math.random() - 0.5) * 5;
-      
+
       mesh.userData = {
         velocity: {
           x: (Math.random() - 0.5) * 0.01,
@@ -57,16 +57,16 @@ const HeroSection = () => {
           x: (Math.random() - 0.5) * 0.02,
           y: (Math.random() - 0.5) * 0.02,
           z: (Math.random() - 0.5) * 0.02,
-        }
+        },
       };
-      
+
       scene.add(mesh);
       shapes.push(mesh);
     }
 
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
     scene.add(ambientLight);
-    
+
     const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
     directionalLight.position.set(5, 5, 5);
     scene.add(directionalLight);
@@ -77,12 +77,12 @@ const HeroSection = () => {
 
     let mouseX = 0;
     let mouseY = 0;
-    
-    const handleMouseMove = (event) => {
+
+    const handleMouseMove = (event: MouseEvent) => {
       mouseX = (event.clientX / window.innerWidth) * 2 - 1;
       mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
     };
-    
+
     window.addEventListener('mousemove', handleMouseMove);
 
     const animate = () => {
@@ -116,7 +116,7 @@ const HeroSection = () => {
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
     };
-    
+
     window.addEventListener('resize', handleResize);
 
     return () => {
@@ -126,38 +126,47 @@ const HeroSection = () => {
       geometries.forEach(g => g.dispose());
       shapes.forEach(s => {
         if (s.geometry) s.geometry.dispose();
-        if (s.material) s.material.dispose();
+        // Type assertion to inform TypeScript about the material property
+        if ((s as THREE.Mesh).material) {
+            // Check if material is an array
+            const material = (s as THREE.Mesh).material;
+            if (Array.isArray(material)) {
+                material.forEach(m => m.dispose());
+            } else {
+                material.dispose();
+            }
+        }
       });
     };
   }, []);
 
-  const handleSearch = (e) => {
+  const handleSearch = (e: React.MouseEvent) => {
     e.preventDefault();
     console.log('Searching for:', { location, product });
   };
 
   return (
     <div className="relative bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 text-center py-12 px-4 sm:py-20 overflow-hidden min-h-screen flex items-center">
-      <canvas 
-        ref={canvasRef} 
+      <canvas
+        ref={canvasRef}
         className="absolute inset-0 w-full h-full pointer-events-none"
         style={{ opacity: 0.6 }}
       />
-      
+
       <div className="relative z-10 w-full">
-        <h1 
+        <h1
           className={`text-4xl md:text-6xl font-bold text-gray-800 mb-6 transition-all duration-1000 ${
             isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-10'
           }`}
-          style={{ 
+          style={{
             textShadow: '2px 2px 4px rgba(0,0,0,0.1)',
-            transitionDelay: '200ms'
+            transitionDelay: '200ms',
           }}
         >
           Connect Directly with Local Farmers
         </h1>
-        
-        <p 
+
+        <p
           className={`text-lg md:text-xl text-gray-600 mb-10 transition-all duration-1000 ${
             isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-10'
           }`}
@@ -165,8 +174,8 @@ const HeroSection = () => {
         >
           Find fresh, local produce right from the source.
         </p>
-        
-        <div 
+
+        <div
           className={`max-w-xl mx-auto flex flex-col sm:flex-row gap-3 mb-10 transition-all duration-1000 ${
             isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
           }`}
@@ -186,15 +195,15 @@ const HeroSection = () => {
             placeholder="e.g., 'Organic Tomatoes'"
             className="p-4 border-2 border-green-200 rounded-lg backdrop-blur-sm bg-white/80 focus:bg-white focus:ring-2 focus:ring-green-400 focus:border-transparent transition-all duration-300 focus:scale-105 hover:shadow-xl outline-none"
           />
-          <button 
+          <button
             onClick={handleSearch}
             className="bg-green-600 text-white font-bold py-4 px-8 rounded-lg hover:bg-green-700 transition-all duration-300 transform hover:scale-110 hover:shadow-2xl active:scale-95"
           >
             Search
           </button>
         </div>
-        
-        <div 
+
+        <div
           className={`my-10 flex items-center justify-center transition-all duration-1000 ${
             isVisible ? 'opacity-100' : 'opacity-0'
           }`}
@@ -206,11 +215,11 @@ const HeroSection = () => {
         </div>
 
         <button
-          onClick={() => window.location.href = '/productspage'}
+          onClick={() => (window.location.href = '/productspage')}
           className={`inline-block bg-white text-green-700 font-bold py-4 px-12 rounded-full border-2 border-green-600 hover:bg-green-600 hover:text-white transition-all duration-500 transform hover:scale-110 shadow-lg hover:shadow-2xl active:scale-95 cursor-pointer ${
             isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
           }`}
-          style={{ 
+          style={{
             transitionDelay: '1000ms',
             backdropFilter: 'blur(10px)',
           }}
@@ -222,7 +231,7 @@ const HeroSection = () => {
       <div className="absolute top-10 left-10 w-72 h-72 bg-green-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
       <div className="absolute top-20 right-10 w-72 h-72 bg-teal-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
       <div className="absolute -bottom-8 left-20 w-72 h-72 bg-emerald-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-4000"></div>
-      
+
       <style>{`
         @keyframes blob {
           0% {
