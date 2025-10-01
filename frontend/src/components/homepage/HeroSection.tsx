@@ -1,4 +1,4 @@
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import React, { useState } from 'react';
 
 const HeroSection = () => {
@@ -47,6 +47,18 @@ const HeroSection = () => {
           Search
         </button>
       </form>
+      <div className="my-8 flex items-center justify-center">
+          <span className="h-px bg-black w-20"></span>
+          <span className="mx-4 font-semibold">OR</span>
+          <span className="h-px bg-black w-20"></span>
+        </div>
+
+        <Link
+          to="/products"
+          className="inline-block bg-white text-green-700 font-bold py-3 px-10 rounded-full border-2 border-transparent hover:bg-transparent hover:text-green-700 hover:border-white transition-all duration-300 transform hover:scale-105 shadow-lg"
+        >
+          Browse Full Collection
+        </Link>
     </div>
   );
 };
