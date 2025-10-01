@@ -1,5 +1,5 @@
 import { useParams } from 'react-router-dom';
-import { products } from '../data/products'; // Import your product data
+import { products } from '../data/products'; 
 
 const ProductDetail = () => {
   const { productId } = useParams<{ productId: string }>();
@@ -19,7 +19,6 @@ const ProductDetail = () => {
       <div className="max-w-4xl mx-auto py-8 px-4 sm:py-12 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 items-center">
           
-          {/* Image Column */}
           <div>
             <img 
               src={product.imageUrl} 
@@ -28,7 +27,6 @@ const ProductDetail = () => {
             />
           </div>
 
-          {/* Details Column */}
           <div>
             <p className="text-sm font-semibold text-gray-500 uppercase">{product.category}</p>
             <h1 className="text-3xl sm:text-4xl font-extrabold text-gray-900 mt-2">{product.name}</h1>

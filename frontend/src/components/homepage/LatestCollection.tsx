@@ -17,7 +17,6 @@ const LatestCollection = () => {
                 <p className="text-sm text-gray-500 mt-1">from {product.farmer}</p>
                 <p className="text-lg font-bold text-green-600 mt-4">{product.price}</p>
                 
-                {/* 2. Replace the <button> with a <Link> component */}
                 <Link 
                   to={`/product/${product.id}`}
                   className="mt-6 block w-full text-center bg-green-600 text-white font-bold py-2 px-4 rounded-md hover:bg-green-700 transition-colors"

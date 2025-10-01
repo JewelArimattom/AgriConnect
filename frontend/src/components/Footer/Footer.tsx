@@ -6,7 +6,6 @@ const Footer = () => {
       <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           
-          {/* About Section */}
           <div className="mb-6 md:mb-0 col-span-1 md:col-span-2">
             <h2 className="text-2xl font-bold text-green-400 mb-2">FarmConnect</h2>
             <p className="text-gray-400">
@@ -14,7 +13,6 @@ const Footer = () => {
             </p>
           </div>
 
-          {/* Quick Links Section */}
           <div>
             <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
             <ul className="space-y-2">
@@ -24,7 +22,6 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Legal Section */}
           <div>
             <h3 className="text-lg font-semibold mb-4">Legal</h3>
             <ul className="space-y-2">
@@ -34,7 +31,6 @@ const Footer = () => {
           </div>
         </div>
 
-        {/* Bottom Bar with Social Icons and Copyright */}
         <div className="mt-8 pt-8 border-t border-gray-700 flex flex-col md:flex-row justify-between items-center">
           <p className="text-gray-500 text-sm mb-4 md:mb-0">
             &copy; {new Date().getFullYear()} FarmConnect. All Rights Reserved.
