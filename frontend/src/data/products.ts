@@ -6,6 +6,7 @@ export interface Product {
   imageUrl: string;
   description: string;
   category: string;
+  
 }
 
 export const products: Product[] = [
