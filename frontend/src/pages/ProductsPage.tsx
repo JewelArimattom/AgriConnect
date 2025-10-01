@@ -1,4 +1,4 @@
-import  { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { products } from '../data/products';
 import { type Product } from '../data/products';
@@ -34,7 +34,7 @@ const ProductsPage = () => {
 
   const [sortOrder, setSortOrder] = useState('default');
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000]);
+  // The unused 'priceRange' state has been removed from here.
 
   // Get unique values for filters
   const categories = ['All', ...Array.from(new Set(products.map(p => p.category)))];
@@ -71,7 +71,7 @@ const ProductsPage = () => {
       organic: false,
       searchQuery: ''
     });
-    setPriceRange([0, maxPrice]);
+    // Also remove the setPriceRange call that was here
     setSortOrder('default');
   }, [maxPrice]);
 
