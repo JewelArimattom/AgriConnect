@@ -6,14 +6,16 @@ import Footer from './components/Footer/Footer';
 
 // Page Components
 import Home from "./components/homepage/Home";
-import LatestCollection from './components/homepage/LatestCollection';
+import ProductsPage from './pages/ProductsPage';
 import ProductDetail from './pages/ProductDetail';
 import CartPage from './pages/CartPage';
 import CheckoutPage from './pages/CheckoutPage';
 import OrderSuccessPage from './pages/OrderSuccessPage';
 import About from './pages/About';
 import Contact from './pages/Contact';
-import ProductsPage from './pages/ProductsPage';
+import ProfilePage from './pages/ProfilePage';
+import LoginPage from './pages/LoginPage';
+import SignupPage from './pages/SignUpPage';
 
 // Fallback Component for 404
 const NotFound = () => <div className="p-8 text-center min-h-screen"><h1>404 - Page Not Found</h1></div>;
@@ -26,9 +28,13 @@ const App = () => {
         <Routes>
           {/* Main Routes */}
           <Route path="/" element={<Home />} />
-          <Route path="/products" element={<LatestCollection />} />
+          <Route path="/products" element={<ProductsPage />} />
           <Route path="/product/:productId" element={<ProductDetail />} />
-          <Route path="/productspage" element={<ProductsPage />} />
+          
+          {/* Auth Routes */}
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignupPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
           
           {/* E-commerce Flow Routes */}
           <Route path="/cart" element={<CartPage />} /> 
@@ -49,3 +55,4 @@ const App = () => {
 }
 
 export default App;
+
