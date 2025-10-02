@@ -1,31 +1,69 @@
+import { useState, useEffect } from 'react';
 import { Link, useParams, useNavigate } from 'react-router-dom';
-import { products } from '../data/products';
 import { useCart } from '../context/CartContext';
+
+
+// Define a type for the product data coming from the backend
+interface Product {
+  _id: string;
+  name: string;
+  farmer: string;
+  price: string;
+  imageUrl: string;
+  description: string;
+  category: string;
+}
 
 const ProductDetail = () => {
   const { productId } = useParams<{ productId: string }>();
-  const product = products.find(p => p.id === parseInt(productId || ''));
   const { addToCart } = useCart();
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
+  
+  // State for the product, loading status, and errors
+  const [product, setProduct] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  // Fetch the specific product from the backend when the component mounts
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        const response = await fetch(`http://localhost:5000/api/products/${productId}`);
+        if (!response.ok) {
+          throw new Error('Product not found');
+        }
+        const data = await response.json();
+        setProduct(data);
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProduct();
+  }, [productId]); // Rerun the effect if the productId changes
 
   const handleBuyNow = () => {
-    addToCart(product!); 
-    navigate('/cart');      
+    if (product) {
+      addToCart(product);
+      navigate('/cart');
+    }
   };
 
-  if (!product) {
-    return (
-      <div className="p-8 text-center min-h-screen">
-        <h1 className="text-2xl font-bold">Product not found!</h1>
-      </div>
-    );
+  // Handle loading and error states
+  if (loading) {
+    return <div className="text-center py-20">Loading product details...</div>;
+  }
+
+  if (error || !product) {
+    return <div className="text-center py-20 text-red-500">Error: {error || 'Product not found!'}</div>;
   }
 
   return (
     <div className="bg-gray-50 min-h-screen">
       <div className="max-w-6xl mx-auto py-8 px-4 sm:py-16 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
-          
           <div className="bg-white p-4 rounded-lg shadow-md">
             <img 
               src={product.imageUrl} 
@@ -69,7 +107,6 @@ const ProductDetail = () => {
                 </button>
               </div>
             </div>
-
           </div>
         </div>
       </div>

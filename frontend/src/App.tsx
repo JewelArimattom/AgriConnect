@@ -13,9 +13,12 @@ import CheckoutPage from './pages/CheckoutPage';
 import OrderSuccessPage from './pages/OrderSuccessPage';
 import About from './pages/About';
 import Contact from './pages/Contact';
-import ProfilePage from './pages/ProfilePage';
+import ProfilePage from './pages/MyOrders';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignUpPage';
+import UploadProductPage from './pages/SellYourProduct'; 
+import FarmerDashboard from './pages/DashboardPage';
+import FarmersTechTools from './pages/FarmersArea';
 
 // Fallback Component for 404
 const NotFound = () => <div className="p-8 text-center min-h-screen"><h1>404 - Page Not Found</h1></div>;
@@ -36,6 +39,11 @@ const App = () => {
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/profile" element={<ProfilePage />} />
           
+          {/* Farmer Route */}
+          <Route path="/upload-product" element={<UploadProductPage />} />
+          <Route path="/dashboard" element={<FarmerDashboard />} />
+          <Route path="/farmers-area" element={<FarmersTechTools />} />
+
           {/* E-commerce Flow Routes */}
           <Route path="/cart" element={<CartPage />} /> 
           <Route path="/checkout" element={<CheckoutPage />} />
