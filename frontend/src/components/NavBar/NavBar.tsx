@@ -32,18 +32,12 @@ const Navbar = () => {
                 </span>
               )}
             </Link>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center">
               <Link 
                 to="/signin" 
                 className="text-gray-600 hover:bg-green-600 hover:text-white px-4 py-2 rounded-md text-sm font-medium border border-green-600"
               >
                 Sign In
-              </Link>
-              <Link 
-                to="/login" 
-                className="bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-green-700"
-              >
-                Sign Up
               </Link>
             </div>
           </div>
@@ -84,12 +78,6 @@ const Navbar = () => {
                 className="text-gray-600 hover:bg-green-600 hover:text-white block px-3 py-2 rounded-md text-base font-medium"
               >
                 Sign In
-              </Link>
-              <Link 
-                to="/login" 
-                className="text-gray-600 hover:bg-green-600 hover:text-white block px-3 py-2 rounded-md text-base font-medium"
-              >
-                Sign Up
               </Link>
             </div>
           </div>

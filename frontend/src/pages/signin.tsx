@@ -32,12 +32,14 @@ const SignIn: React.FC = () => {
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
             Sign in to your account
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Or{' '}
-            <a href="/login" className="font-medium text-green-600 hover:text-green-500">
-              create a new account
-            </a>
-          </p>
+          <div className="mt-3 text-center">
+            <button
+              onClick={() => navigate('/signup')}
+              className="inline-flex items-center px-4 py-2 border border-green-600 text-sm font-medium rounded-md text-green-600 hover:bg-green-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+            >
+              New user? Create an account
+            </button>
+          </div>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
           {error && (

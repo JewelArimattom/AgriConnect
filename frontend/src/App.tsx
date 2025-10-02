@@ -9,6 +9,7 @@ import CartPage from './pages/CartPage';
 import About from './pages/About';
 import Contact from './pages/Contact';
 import SignIn from './pages/signin';
+import SignUp from './pages/signup';
 
 const NotFound = () => <div className="p-8 text-center min-h-screen"><h1>404 - Page Not Found</h1></div>;
 
@@ -26,6 +27,7 @@ const App = () => {
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/signin" element={<SignIn />} />
+          <Route path="/signup" element={<SignUp />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
