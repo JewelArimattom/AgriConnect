@@ -32,6 +32,20 @@ const Navbar = () => {
                 </span>
               )}
             </Link>
+            <div className="flex items-center space-x-4">
+              <Link 
+                to="/signin" 
+                className="text-gray-600 hover:bg-green-600 hover:text-white px-4 py-2 rounded-md text-sm font-medium border border-green-600"
+              >
+                Sign In
+              </Link>
+              <Link 
+                to="/login" 
+                className="bg-green-600 text-white px-4 py-2 rounded-md text-sm font-medium hover:bg-green-700"
+              >
+                Sign Up
+              </Link>
+            </div>
           </div>
           
           <div className="-mr-2 flex md:hidden">
@@ -64,6 +78,20 @@ const Navbar = () => {
                 </span>
               )}
             </Link>
+            <div className="pt-4 pb-3 border-t border-gray-200">
+              <Link 
+                to="/signin" 
+                className="text-gray-600 hover:bg-green-600 hover:text-white block px-3 py-2 rounded-md text-base font-medium"
+              >
+                Sign In
+              </Link>
+              <Link 
+                to="/login" 
+                className="text-gray-600 hover:bg-green-600 hover:text-white block px-3 py-2 rounded-md text-base font-medium"
+              >
+                Sign Up
+              </Link>
+            </div>
           </div>
         </div>
       )}
