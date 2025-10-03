@@ -17,8 +17,6 @@ const Navbar = () => {
     navigate('/');
   };
 
-
-
   return (
     <nav className="bg-white shadow-md sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -40,14 +38,15 @@ const Navbar = () => {
                 className="relative" 
                 onMouseEnter={() => setProfileOpen(true)} 
                 onMouseLeave={() => setProfileOpen(false)}
-                 
               >
                 <button className="flex items-center text-gray-600 hover:text-green-600 focus:outline-none">
                   <UserCircleIcon className="h-8 w-8" />
                 </button>
                 
+                {/* --- MODIFIED THIS DIV --- */}
+                {/* Removed mt-2 and added pt-2 to close the gap between the button and the menu */}
                 <div 
-                  className={`absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-20 transition-all duration-200 ease-out ${isProfileOpen ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'}`}
+                  className={`absolute right-0 w-48 bg-white rounded-md shadow-lg py-1 z-20 transition-all duration-200 ease-out pt-2 ${isProfileOpen ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'}`}
                 >
                   <Link to="farmers-area" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Farmers Area</Link>
                   <Link to="/profile" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">My Orders</Link>
@@ -71,6 +70,7 @@ const Navbar = () => {
 
       {isMobileMenuOpen && (
         <div className="md:hidden px-2 pt-2 pb-3 space-y-1 sm:px-3">
+          {/* Mobile menu content remains the same */}
           {user ? (
              <>
               <Link to="farmers-area" className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:bg-gray-50">Farmers Area</Link>
@@ -89,4 +89,3 @@ const Navbar = () => {
 };
 
 export default Navbar;
-
