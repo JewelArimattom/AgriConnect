@@ -1,6 +1,4 @@
-// HeroSection.tsx
 import { useEffect, useRef } from 'react';
-import { NavLink } from 'react-router-dom';
 import * as THREE from 'three';
 
 const HeroSection = () => {
