@@ -753,13 +753,7 @@ const FarmersTechTools = () => {
 
             {/* API Key Input */}
             <div className="hidden md:flex items-center space-x-4">
-              <input
-                type="password"
-                placeholder="OpenAI API Key (Optional)"
-                value={apiKeys.openai}
-                onChange={(e) => setApiKeys({...apiKeys, openai: e.target.value})}
-                className="px-4 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent w-48"
-              />
+              
             </div>
           </div>
         </div>
