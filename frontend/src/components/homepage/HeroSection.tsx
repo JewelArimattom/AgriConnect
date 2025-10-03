@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { NavLink } from 'react-router-dom';
 import * as THREE from 'three';
 
 const HeroSection = () => {
@@ -126,9 +127,7 @@ const HeroSection = () => {
       geometries.forEach(g => g.dispose());
       shapes.forEach(s => {
         if (s.geometry) s.geometry.dispose();
-        // Type assertion to inform TypeScript about the material property
         if ((s as THREE.Mesh).material) {
-            // Check if material is an array
             const material = (s as THREE.Mesh).material;
             if (Array.isArray(material)) {
                 material.forEach(m => m.dispose());
@@ -214,8 +213,8 @@ const HeroSection = () => {
           <span className="h-px bg-gray-400 w-24 transition-all duration-500 hover:w-32"></span>
         </div>
 
-        <button
-          onClick={() => (window.location.href = '/productspage')}
+        <NavLink to="/products"><button
+          
           className={`inline-block bg-white text-green-700 font-bold py-4 px-12 rounded-full border-2 border-green-600 hover:bg-green-600 hover:text-white transition-all duration-500 transform hover:scale-110 shadow-lg hover:shadow-2xl active:scale-95 cursor-pointer ${
             isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-10'
           }`}
@@ -225,7 +224,7 @@ const HeroSection = () => {
           }}
         >
           Browse Full Collection
-        </button>
+        </button></NavLink>
       </div>
 
       <div className="absolute top-10 left-10 w-72 h-72 bg-green-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>

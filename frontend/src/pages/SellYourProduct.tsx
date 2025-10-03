@@ -2,19 +2,25 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthenticationContext';
 
-// The URL for your backend API endpoint to create products
 const API_URL = 'http://localhost:5000/api/products';
+
+const subCategoryMap: { [key: string]: string[] } = {
+  'Produce': ['Fruits', 'Vegetables', 'Herbs'],
+  'Animal Products': ['Dairy & Eggs', 'Meat & Poultry', 'Seafood'],
+  'Pantry': ['Grains', 'Spices', 'Oils & Sauces'],
+  'Artisanal Goods': ['Cheese', 'Honey', 'Jams'],
+};
 
 const SellYourProduct = () => {
   const navigate = useNavigate();
-  const { user } = useAuth(); // Get the currently logged-in user
+  const { user } = useAuth();
 
-  // A single state object to manage all form fields
   const [formData, setFormData] = useState({
     name: '',
     description: '',
     imageUrl: '',
-    category: 'Fresh Produce',
+    category: 'Produce', 
+    subCategory: '',
     buyType: 'direct_buy',
     price: '',
     startingBid: '',
@@ -23,12 +29,21 @@ const SellYourProduct = () => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
 
-  // A single handler to update the form data state
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    const { name, value } = e.target;
+    
+    if (name === 'category') {
+      setFormData({
+        ...formData,
+        category: value,
+        subCategory: '', 
+      });
+    } else {
+      setFormData({
+        ...formData,
+        [name]: value,
+      });
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -42,10 +57,9 @@ const SellYourProduct = () => {
       return;
     }
 
-    // Construct the payload based on the form data
     const payload = {
       ...formData,
-      farmer: user.name, // Assign the product to the logged-in user
+      farmer: user.name,
     };
 
     try {
@@ -61,7 +75,7 @@ const SellYourProduct = () => {
       }
 
       alert('Product submitted successfully!');
-      navigate('/dashboard'); // Redirect to the dashboard on success
+      navigate('/dashboard');
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -69,36 +83,42 @@ const SellYourProduct = () => {
     }
   };
 
+  const currentSubCategories = subCategoryMap[formData.category] || [];
+
   return (
     <div className="bg-gray-50 min-h-screen py-12 px-4">
       <div className="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-md">
         <h2 className="text-3xl font-extrabold text-center mb-6">List a New Product</h2>
         {error && <p className="text-center text-sm text-red-600 mb-4">{error}</p>}
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Product Details */}
           <input name="name" value={formData.name} onChange={handleChange} placeholder="Product Name (e.g., Organic Apples)" required className="w-full p-3 border rounded-md"/>
           <textarea name="description" value={formData.description} onChange={handleChange} placeholder="Detailed Description" required rows={4} className="w-full p-3 border rounded-md"></textarea>
           <input name="imageUrl" value={formData.imageUrl} onChange={handleChange} placeholder="Image URL" required className="w-full p-3 border rounded-md"/>
 
-          {/* Category Dropdown */}
           <select name="category" value={formData.category} onChange={handleChange} required className="w-full p-3 border bg-white rounded-md">
-            <option value="Fresh Produce">Fresh Produce</option>
-            <option value="Dairy & Eggs">Dairy & Eggs</option>
-            <option value="Meat & Poultry">Meat & Poultry</option>
+            <option value="Produce">Produce</option>
+            <option value="Animal Products">Animal Products</option>
             <option value="Bakery">Bakery</option>
-            <option value="Pantry Staples">Pantry Staples</option>
-            <option value="Plants & Flowers">Plants & Flowers</option>
+            <option value="Pantry">Pantry</option>
             <option value="Artisanal Goods">Artisanal Goods</option>
+            <option value="Plants & Flowers">Plants & Flowers</option>
           </select>
 
-          {/* Buy Type Selection */}
+          {currentSubCategories.length > 0 && (
+            <select name="subCategory" value={formData.subCategory} onChange={handleChange} required className="w-full p-3 border bg-white rounded-md">
+              <option value="" disabled>-- Select a Sub-Category --</option>
+              {currentSubCategories.map(sub => (
+                <option key={sub} value={sub}>{sub}</option>
+              ))}
+            </select>
+          )}
+
           <select name="buyType" value={formData.buyType} onChange={handleChange} required className="w-full p-3 border bg-white rounded-md">
             <option value="direct_buy">Direct Buy</option>
             <option value="enquiry">Send Enquiry</option>
             <option value="auction">Live Auction</option>
           </select>
-
-          {/* --- Conditional Fields --- */}
+          
           {formData.buyType === 'direct_buy' && (
             <input name="price" value={formData.price} onChange={handleChange} placeholder="Price (e.g., ₹250/kg)" required className="w-full p-3 border rounded-md"/>
           )}
@@ -129,4 +149,3 @@ const SellYourProduct = () => {
 };
 
 export default SellYourProduct;
-

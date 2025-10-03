@@ -9,7 +9,7 @@ const orderSchema = new mongoose.Schema({
   },
   products: [
     {
-      productId: { type: String, required: true }, // In a real app, this would be mongoose.Schema.Types.ObjectId
+      productId: { type: String, required: true }, 
       name: { type: String, required: true },
       price: { type: String, required: true },
     },
@@ -18,7 +18,7 @@ const orderSchema = new mongoose.Schema({
     type: Number,
     required: true,
   },
-  farmer: { // To associate the order with the farmer whose products were purchased
+  farmer: { 
     type: String,
     required: true,
   },
@@ -28,7 +28,7 @@ const orderSchema = new mongoose.Schema({
     default: 'Pending',
   },
 }, {
-  timestamps: true, // Automatically adds createdAt and updatedAt fields
+  timestamps: true, 
 });
 
 const Order = mongoose.model('Order', orderSchema);

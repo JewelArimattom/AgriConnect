@@ -53,7 +53,7 @@ app.post('/api/auth/login', async (req, res) => {
   }
 });
 
-// --- Product Routes ---
+// ... existing product routes ...
 app.post('/api/products', async (req, res) => {
   try {
     const newProduct = new Product(req.body);
@@ -109,6 +109,115 @@ app.delete('/api/products/:id', async (req, res) => {
   }
 });
 
+// In Server.js
+
+app.get('/api/animal-products', async (req, res) => {
+  try {
+    // --- BEFORE (The Problem) ---
+    // const animalProducts = await Product.find({ category: { $in: ['Meat & Poultry', 'Dairy & Eggs'] }  });
+
+    // --- AFTER (The Fix) ---
+    // This correctly finds products with the main category "Animal Products"
+    const animalProducts = await Product.find({ category: 'Animal Products' });
+
+    res.json(animalProducts);
+  } catch (error) {
+    res.status(500).json({ message: 'Server error fetching animal products' });
+  }
+});
+
+// ---=============================---
+// ---     USER CART ROUTES        ---
+// ---=============================---
+
+// GET a user's cart
+app.get('/api/users/:userId/cart', async (req, res) => {
+    try {
+        const user = await User.findById(req.params.userId).populate({
+            path: 'cart.productId',
+            model: 'Product' // Explicitly define the model to use for population
+        });
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+        
+        // Filter out any cart items where the product might have been deleted
+        const validCartItems = user.cart.filter(item => item.productId);
+
+        res.json(validCartItems);
+    } catch (error) {
+        console.error("Error fetching cart:", error);
+        res.status(500).json({ message: 'Server error fetching cart' });
+    }
+});
+
+// ADD an item to a user's cart
+app.post('/api/users/:userId/cart', async (req, res) => {
+    const { productId } = req.body;
+    // Set quantity to 1 if not provided
+    const quantity = req.body.quantity || 1;
+
+    try {
+        const user = await User.findById(req.params.userId);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        const itemIndex = user.cart.findIndex(item => item.productId && item.productId.toString() === productId);
+
+        if (itemIndex > -1) {
+            // If item exists, update quantity
+            user.cart[itemIndex].quantity += quantity;
+        } else {
+            // If item doesn't exist, add it to cart
+            user.cart.push({ productId, quantity });
+        }
+
+        await user.save();
+        const populatedUser = await user.populate({ path: 'cart.productId', model: 'Product' });
+        res.status(200).json(populatedUser.cart.filter(item => item.productId));
+    } catch (error) {
+        console.error("Error adding to cart:", error);
+        res.status(500).json({ message: 'Server error adding to cart' });
+    }
+});
+
+// DELETE a specific item from a user's cart
+app.delete('/api/users/:userId/cart/:productId', async (req, res) => {
+    try {
+        const user = await User.findById(req.params.userId);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        user.cart = user.cart.filter(item => item.productId && item.productId.toString() !== req.params.productId);
+        
+        await user.save();
+        res.json({ message: 'Item removed from cart' });
+    } catch (error) {
+        console.error("Error deleting item from cart:", error);
+        res.status(500).json({ message: 'Server error deleting item from cart' });
+    }
+});
+
+// CLEAR a user's entire cart
+app.delete('/api/users/:userId/cart', async (req, res) => {
+    try {
+        const user = await User.findById(req.params.userId);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        user.cart = [];
+        await user.save();
+        res.json({ message: 'Cart cleared' });
+    } catch (error) {
+        console.error("Error clearing cart:", error);
+        res.status(500).json({ message: 'Server error clearing cart' });
+    }
+});
+
 
 // --- Order Route ---
 app.post('/api/orders', async (req, res) => {
@@ -157,6 +266,7 @@ app.get('/api/orders/myorders/:customerName', async (req, res) => {
     res.status(500).json({ message: 'Server Error' });
   }
 });
+
 
 // --- Server Listener ---
 app.listen(PORT, () => {

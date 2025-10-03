@@ -2,13 +2,12 @@ import  { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthenticationContext';
 
-// Define the shape of the order data we expect from the backend
 interface Order {
   _id: string;
   totalAmount: number;
   status: 'Pending' | 'Shipped' | 'Delivered' | 'Cancelled';
   createdAt: string;
-  products: { name: string }[]; // Include products for more detail
+  products: { name: string }[]; 
 }
 
 const MyOrdersPage = () => {
@@ -25,7 +24,6 @@ const MyOrdersPage = () => {
       }
       try {
         setLoading(true);
-        // Fetch orders for the currently logged-in user
         const response = await fetch(`http://localhost:5000/api/orders/myorders/${user.name}`);
         if (!response.ok) {
           throw new Error('Failed to fetch your orders.');
@@ -40,14 +38,12 @@ const MyOrdersPage = () => {
     };
 
     fetchOrders();
-  }, [user]); // Refetch orders if the user changes (e.g., on login)
+  }, [user]); 
 
-  // Render a loading state while data is being fetched
   if (loading) {
     return <div className="text-center py-20 font-semibold">Loading your order history...</div>;
   }
 
-  // Render an error message if the fetch fails
   if (error) {
     return <div className="text-center py-20 text-red-600">Error: {error}</div>;
   }

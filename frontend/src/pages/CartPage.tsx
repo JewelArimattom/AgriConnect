@@ -4,14 +4,11 @@ import { useCart } from '../context/CartContext';
 const CartPage = () => {
   const { cartItems, removeFromCart, clearCart } = useCart();
 
-  // Calculate the subtotal
   const subtotal = cartItems.reduce((total, item) => {
-    // A simple parser for the price string '₹XXX/unit'
     const price = parseFloat(item.price.replace('₹', ''));
     return total + price;
   }, 0);
 
-  // If cart is empty, show a message
   if (cartItems.length === 0) {
     return (
       <div className="text-center py-20 min-h-screen">
@@ -24,7 +21,6 @@ const CartPage = () => {
     );
   }
 
-  // If cart has items, display them
   return (
     <div className="bg-gray-50 min-h-screen">
       <div className="max-w-4xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
@@ -51,7 +47,6 @@ const CartPage = () => {
           </ul>
         </div>
 
-        {/* Cart Summary and Actions */}
         <div className="mt-8">
           <div className="flex justify-between items-center text-lg font-semibold">
             <span>Subtotal</span>

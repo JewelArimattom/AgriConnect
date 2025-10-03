@@ -2,7 +2,6 @@ import  { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthenticationContext';
 
-// Define TypeScript types for the data from the backend
 interface Product {
   _id: string;
   name: string;
@@ -64,7 +63,7 @@ const FarmerDashboard = () => {
           method: 'DELETE',
         });
         if (!response.ok) throw new Error('Failed to delete product.');
-        fetchData(); // Refetch data to update the UI
+        fetchData(); 
       } catch (err: any) {
         setError(err.message);
       }

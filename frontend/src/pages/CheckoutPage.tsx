@@ -2,11 +2,9 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 
-// Define the type for items in the cart, which might have _id
 interface CartItem {
   _id: string;
-  id: number; // Keeping id for key prop if needed, though _id is better
-  name: string;
+  id: number; 
   price: string;
   farmer: string;
   imageUrl: string;
@@ -18,16 +16,14 @@ const CheckoutPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // State for form inputs
   const [formData, setFormData] = useState({
     name: '',
     address: '',
     city: '',
     postalCode: '',
-    cardNumber: '', // Note: In a real app, never handle raw card numbers like this
+    cardNumber: '', 
   });
 
-  // Calculate subtotal and total
   const subtotal = (cartItems as CartItem[]).reduce((total, item) => {
     const price = parseFloat(item.price.replace('₹', ''));
     return total + (isNaN(price) ? 0 : price);
@@ -52,9 +48,7 @@ const CheckoutPage = () => {
       return;
     }
     
-    // In a real multi-vendor app, you would group cart items by farmer
-    // and create separate orders. For simplicity, we'll assign the order
-    // to the farmer of the first item in the cart.
+    
     const farmerName = (cartItems[0] as CartItem)?.farmer;
 
     try {
@@ -69,7 +63,7 @@ const CheckoutPage = () => {
             postalCode: formData.postalCode,
           },
           products: (cartItems as CartItem[]).map(item => ({
-            productId: item._id, // Use the MongoDB _id
+            productId: item._id, 
             name: item.name,
             price: item.price,
           })),
@@ -99,7 +93,6 @@ const CheckoutPage = () => {
         {error && <p className="text-center text-red-600 mb-4">{error}</p>}
         
         <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-2 gap-12">
-          {/* Shipping & Payment Form */}
           <div className="bg-white p-8 rounded-lg shadow-md space-y-6">
             <div>
               <h2 className="text-xl font-semibold mb-4">Shipping Information</h2>
@@ -118,7 +111,6 @@ const CheckoutPage = () => {
             </div>
           </div>
 
-          {/* Order Summary */}
           <div className="bg-white p-8 rounded-lg shadow-md">
             <h2 className="text-xl font-semibold mb-6">Order Summary</h2>
             <div className="space-y-4">

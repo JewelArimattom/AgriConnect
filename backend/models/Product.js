@@ -17,18 +17,22 @@ const productSchema = new mongoose.Schema({
     type: String, 
     required: true
   },
+  
   category: {
     type: String,
     required: true,
     enum: [
-      'Fresh Produce',
-      'Dairy & Eggs',
-      'Meat & Poultry',
+      'Produce',
+      'Animal Products', 
       'Bakery',
-      'Pantry Staples',
-      'Plants & Flowers',
-      'Artisanal Goods'
+      'Pantry',
+      'Artisanal Goods',
+      'Plants & Flowers'
     ]
+  },
+  
+  subCategory: {
+    type: String,
   },
   buyType: {
     type: String,
@@ -36,12 +40,10 @@ const productSchema = new mongoose.Schema({
     enum: ['direct_buy', 'enquiry', 'auction'],
     default: 'direct_buy'
   },
-  // Price is only required for 'direct_buy'
   price: { 
     type: String, 
     required: function() { return this.buyType === 'direct_buy'; }
   },
-  // Auction-specific fields
   auctionStartTime: {
     type: Date,
     required: function() { return this.buyType === 'auction'; }
@@ -61,4 +63,3 @@ const productSchema = new mongoose.Schema({
 const Product = mongoose.model('Product', productSchema);
 
 module.exports = Product;
-

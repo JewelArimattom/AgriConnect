@@ -1,15 +1,25 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { products } from '../data/products';
-import { type Product } from '../data/products';
 
-// Price range type
+// 1. Updated the Product type for better default handling
+interface Product {
+  _id: string;
+  name: string;
+  description: string;
+  imageUrl: string;
+  farmer: string;
+  category: string;
+  price: string;
+  rating: number;
+  inStock?: boolean; // Changed to optional
+  organic: boolean;
+}
+
 interface PriceRange {
   min: number;
   max: number;
 }
 
-// Advanced filter state
 interface FilterState {
   category: string;
   priceRange: PriceRange;
@@ -21,10 +31,16 @@ interface FilterState {
 }
 
 const ProductsPage = () => {
-  // Advanced filter state
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  // 2. Set a fixed higher max price for the filter
+  const maxPrice = 2000;
+
   const [filters, setFilters] = useState<FilterState>({
     category: 'All',
-    priceRange: { min: 0, max: 1000 },
+    priceRange: { min: 0, max: maxPrice }, // Use the new max price
     farmers: [],
     rating: 0,
     inStock: false,
@@ -35,49 +51,34 @@ const ProductsPage = () => {
   const [sortOrder, setSortOrder] = useState('default');
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
-  // Get unique values for filters
-  const categories = ['All', ...Array.from(new Set(products.map(p => p.category)))];
-  const allFarmers = Array.from(new Set(products.map(p => p.farmer)));
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await fetch('http://localhost:5000/api/products');
+        if (!response.ok) {
+          throw new Error('Failed to fetch products.');
+        }
+        const data: Product[] = await response.json();
+        setProducts(data);
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProducts();
+  }, []);
+
+  const categories = useMemo(() => 
+    ['All', ...Array.from(new Set(products.map(p => p.category)))], 
+  [products]);
+
+  const allFarmers = useMemo(() => 
+    Array.from(new Set(products.map(p => p.farmer))), 
+  [products]);
   
-  // Calculate price range from products
-  const maxPrice = useMemo(() => 
-    Math.max(...products.map(p => parseFloat(p.price.replace('₹', '')))), 
-  []);
-
-  // Update individual filters
-  const updateFilter = useCallback((key: keyof FilterState, value: any) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
-  }, []);
-
-  // Toggle farmer selection
-  const toggleFarmer = useCallback((farmer: string) => {
-    setFilters(prev => ({
-      ...prev,
-      farmers: prev.farmers.includes(farmer)
-        ? prev.farmers.filter(f => f !== farmer)
-        : [...prev.farmers, farmer]
-    }));
-  }, []);
-
-  // Clear all filters
-  const clearAllFilters = useCallback(() => {
-    setFilters({
-      category: 'All',
-      priceRange: { min: 0, max: maxPrice },
-      farmers: [],
-      rating: 0,
-      inStock: false,
-      organic: false,
-      searchQuery: ''
-    });
-    setSortOrder('default');
-  }, [maxPrice]);
-
-  // Memoize the filtered and sorted products
   const filteredAndSortedProducts = useMemo(() => {
     let filtered = [...products];
-
-    // 1. Apply search filter
     if (filters.searchQuery) {
       const query = filters.searchQuery.toLowerCase();
       filtered = filtered.filter(product => 
@@ -86,39 +87,26 @@ const ProductsPage = () => {
         product.farmer.toLowerCase().includes(query)
       );
     }
-
-    // 2. Apply category filter
     if (filters.category !== 'All') {
       filtered = filtered.filter(product => product.category === filters.category);
     }
-
-    // 3. Apply price range filter
     filtered = filtered.filter(product => {
       const price = parseFloat(product.price.replace('₹', ''));
       return price >= filters.priceRange.min && price <= filters.priceRange.max;
     });
-
-    // 4. Apply farmer filter
     if (filters.farmers.length > 0) {
       filtered = filtered.filter(product => filters.farmers.includes(product.farmer));
     }
-
-    // 5. Apply rating filter
     if (filters.rating > 0) {
       filtered = filtered.filter(product => product.rating >= filters.rating);
     }
-
-    // 6. Apply in-stock filter
     if (filters.inStock) {
-      filtered = filtered.filter(product => product.inStock);
+      // Logic: Only show items where inStock is NOT explicitly false
+      filtered = filtered.filter(product => product.inStock !== false);
     }
-
-    // 7. Apply organic filter
     if (filters.organic) {
       filtered = filtered.filter(product => product.organic);
     }
-
-    // 8. Apply sorting
     switch (sortOrder) {
       case 'price-asc':
         filtered.sort((a, b) => parseFloat(a.price.replace('₹', '')) - parseFloat(b.price.replace('₹', '')));
@@ -138,11 +126,35 @@ const ProductsPage = () => {
       default:
         break;
     }
-
     return filtered;
-  }, [filters, sortOrder]);
+  }, [products, filters, sortOrder]);
 
-  // Calculate active filter count
+  const updateFilter = useCallback((key: keyof FilterState, value: any) => {
+    setFilters(prev => ({ ...prev, [key]: value }));
+  }, []);
+
+  const toggleFarmer = useCallback((farmer: string) => {
+    setFilters(prev => ({
+      ...prev,
+      farmers: prev.farmers.includes(farmer)
+        ? prev.farmers.filter(f => f !== farmer)
+        : [...prev.farmers, farmer]
+    }));
+  }, []);
+
+  const clearAllFilters = useCallback(() => {
+    setFilters({
+      category: 'All',
+      priceRange: { min: 0, max: maxPrice },
+      farmers: [],
+      rating: 0,
+      inStock: false,
+      organic: false,
+      searchQuery: ''
+    });
+    setSortOrder('default');
+  }, [maxPrice]);
+  
   const activeFilterCount = useMemo(() => {
     let count = 0;
     if (filters.category !== 'All') count++;
@@ -155,6 +167,14 @@ const ProductsPage = () => {
     return count;
   }, [filters, maxPrice]);
 
+  if (loading) {
+    return <div className="text-center py-40">Loading products...</div>;
+  }
+
+  if (error) {
+    return <div className="text-center py-40 text-red-600">Error: {error}</div>;
+  }
+
   return (
     <div className="bg-gray-50 min-h-screen">
       <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
@@ -166,8 +186,6 @@ const ProductsPage = () => {
             Browse our full collection of fresh produce and artisanal goods from local farmers.
           </p>
         </div>
-
-        {/* Search Bar */}
         <div className="mb-8">
           <div className="relative max-w-2xl mx-auto">
             <input
@@ -185,7 +203,6 @@ const ProductsPage = () => {
           </div>
         </div>
 
-        {/* Active Filters & Controls */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
           <div className="flex items-center gap-4">
             <button
@@ -202,7 +219,6 @@ const ProductsPage = () => {
                 </span>
               )}
             </button>
-
             {activeFilterCount > 0 && (
               <button
                 onClick={clearAllFilters}
@@ -212,7 +228,6 @@ const ProductsPage = () => {
               </button>
             )}
           </div>
-
           <div className="flex items-center gap-4">
             <span className="text-sm text-gray-600">
               {filteredAndSortedProducts.length} products found
@@ -231,14 +246,11 @@ const ProductsPage = () => {
             </select>
           </div>
         </div>
-
-        {/* Main content grid */}
+        
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Filters Sidebar */}
           <aside className={`lg:col-span-1 bg-white p-6 rounded-lg shadow-md h-fit ${showAdvancedFilters ? 'sticky top-24' : ''}`}>
             <h2 className="text-xl font-semibold mb-4">Filters</h2>
             
-            {/* Category Filter */}
             <div className="mb-6">
               <h3 className="text-lg font-medium mb-2">Category</h3>
               <div className="space-y-2 max-h-48 overflow-y-auto">
@@ -254,7 +266,6 @@ const ProductsPage = () => {
               </div>
             </div>
 
-            {/* Price Range Filter */}
             <div className="mb-6">
               <h3 className="text-lg font-medium mb-2">Price Range</h3>
               <div className="space-y-4">
@@ -286,11 +297,9 @@ const ProductsPage = () => {
                 />
               </div>
             </div>
-
-            {/* Advanced Filters */}
-            {showAdvancedFilters && (
+            
+             {showAdvancedFilters && (
               <>
-                {/* Farmer Filter */}
                 <div className="mb-6">
                   <h3 className="text-lg font-medium mb-2">Farmers</h3>
                   <div className="space-y-2 max-h-48 overflow-y-auto">
@@ -307,8 +316,6 @@ const ProductsPage = () => {
                     ))}
                   </div>
                 </div>
-
-                {/* Rating Filter */}
                 <div className="mb-6">
                   <h3 className="text-lg font-medium mb-2">Minimum Rating</h3>
                   <div className="flex space-x-1">
@@ -333,8 +340,6 @@ const ProductsPage = () => {
                     </button>
                   )}
                 </div>
-
-                {/* Boolean Filters */}
                 <div className="space-y-4">
                   <label className="flex items-center space-x-2 cursor-pointer">
                     <input
@@ -345,7 +350,6 @@ const ProductsPage = () => {
                     />
                     <span className="text-gray-600">In Stock Only</span>
                   </label>
-
                   <label className="flex items-center space-x-2 cursor-pointer">
                     <input
                       type="checkbox"
@@ -359,16 +363,17 @@ const ProductsPage = () => {
               </>
             )}
           </aside>
-
-          {/* Product Grid */}
+          
           <main className="lg:col-span-3">
             {filteredAndSortedProducts.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-8">
                 {filteredAndSortedProducts.map((product: Product) => (
-                  <div key={product.id} className="bg-white rounded-lg shadow-lg overflow-hidden transform hover:scale-105 transition-transform duration-300 group">
+                  <div key={product._id} className="bg-white rounded-lg shadow-lg overflow-hidden transform hover:scale-105 transition-transform duration-300 group">
                     <div className="relative">
-                      <img className="h-56 w-full object-cover" src={product.imageUrl} alt={product.name} />
-                      {!product.inStock && (
+                      {/* 3. Use a placeholder for missing images */}
+                      <img className="h-56 w-full object-cover" src={product.imageUrl || 'https://placehold.co/600x400/EEE/31343C?text=No+Image'} alt={product.name} />
+                      {/* 4. Only show "Out of Stock" if inStock is explicitly false */}
+                      {product.inStock === false && (
                         <div className="absolute inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center">
                           <span className="text-white font-bold text-lg bg-red-600 px-3 py-1 rounded">Out of Stock</span>
                         </div>
@@ -392,15 +397,15 @@ const ProductsPage = () => {
                       <p className="text-sm text-gray-500">from {product.farmer}</p>
                       <p className="text-lg font-bold text-green-600 mt-4">{product.price}</p>
                       <Link 
-                        to={`/product/${product.id}`}
+                        to={`/product/${product._id}`}
                         className={`mt-6 block w-full text-center font-bold py-2 px-4 rounded-md transition-colors ${
-                          product.inStock 
+                          product.inStock !== false 
                             ? 'bg-green-600 text-white hover:bg-green-700' 
                             : 'bg-gray-400 text-gray-200 cursor-not-allowed'
                         }`}
-                        onClick={(e) => !product.inStock && e.preventDefault()}
+                        onClick={(e) => product.inStock === false && e.preventDefault()}
                       >
-                        {product.inStock ? 'View Details' : 'Out of Stock'}
+                        {product.inStock !== false ? 'View Details' : 'Out of Stock'}
                       </Link>
                     </div>
                   </div>

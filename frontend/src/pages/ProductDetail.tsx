@@ -3,7 +3,6 @@ import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 
 
-// Define a type for the product data coming from the backend
 interface Product {
   _id: string;
   name: string;
@@ -19,12 +18,10 @@ const ProductDetail = () => {
   const { addToCart } = useCart();
   const navigate = useNavigate();
   
-  // State for the product, loading status, and errors
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // Fetch the specific product from the backend when the component mounts
   useEffect(() => {
     const fetchProduct = async () => {
       try {
@@ -42,7 +39,7 @@ const ProductDetail = () => {
     };
 
     fetchProduct();
-  }, [productId]); // Rerun the effect if the productId changes
+  }, [productId]); 
 
   const handleBuyNow = () => {
     if (product) {
@@ -51,7 +48,6 @@ const ProductDetail = () => {
     }
   };
 
-  // Handle loading and error states
   if (loading) {
     return <div className="text-center py-20">Loading product details...</div>;
   }

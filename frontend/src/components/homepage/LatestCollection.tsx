@@ -1,9 +1,8 @@
 import  { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 
-// 1. Define a TypeScript type for the product data coming from the backend
 interface Product {
-  _id: string; // MongoDB uses _id instead of id
+  _id: string; 
   name: string;
   farmer: string;
   price: string;
@@ -11,12 +10,10 @@ interface Product {
 }
 
 const LatestCollection = () => {
-  // 2. Set up state for products, loading status, and errors
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  // 3. Use useEffect to fetch data from your backend API when the component mounts
   useEffect(() => {
     const fetchProducts = async () => {
       try {
@@ -34,9 +31,8 @@ const LatestCollection = () => {
     };
 
     fetchProducts();
-  }, []); // The empty array ensures this effect runs only once
+  }, []); 
 
-  // 4. Handle loading and error states to provide user feedback
   if (loading) {
     return <div className="text-center py-20 text-lg font-semibold">Loading fresh products...</div>;
   }
@@ -52,7 +48,6 @@ const LatestCollection = () => {
           Our Latest Collection
         </h2>
         
-        {/* 5. Map over the products from state (fetched from backend) to display them */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
           {products.map((product) => (
             <div key={product._id} className="bg-white rounded-lg shadow-lg overflow-hidden transform hover:scale-105 transition-transform duration-300">
@@ -62,7 +57,7 @@ const LatestCollection = () => {
                 <p className="text-sm text-gray-500 mt-1">from {product.farmer}</p>
                 <p className="text-lg font-bold text-green-600 mt-4">{product.price}</p>
                 <Link 
-                  to={`/product/${product._id}`} // Use _id for the link to the detail page
+                  to={`/product/${product._id}`} 
                   className="mt-6 block w-full text-center bg-green-600 text-white font-bold py-2 px-4 rounded-md hover:bg-green-700 transition-colors"
                 >
                   View Product

@@ -18,7 +18,6 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const API_URL = 'http://localhost:5000/api/auth';
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
-  // 1. Initialize user state by reading from localStorage
   const [user, setUser] = useState<AuthUser | null>(() => {
     try {
       const storedUser = localStorage.getItem('farmConnectUser');
@@ -29,7 +28,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   });
 
-  // 2. Use an effect to automatically update localStorage whenever the user state changes
   useEffect(() => {
     if (user) {
       localStorage.setItem('farmConnectUser', JSON.stringify(user));
@@ -46,7 +44,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
     const data = await response.json();
     if (response.ok) {
-      setUser(data); // This will trigger the useEffect to save the user
+      setUser(data); 
     } else {
       throw new Error(data.message || 'Failed to sign up');
     }
@@ -60,14 +58,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
     const data = await response.json();
     if (response.ok) {
-      setUser(data); // This will trigger the useEffect to save the user
+      setUser(data); 
     } else {
       throw new Error(data.message || 'Failed to log in');
     }
   };
 
   const logout = () => {
-    setUser(null); // This will trigger the useEffect to remove the user
+    setUser(null); 
   };
 
   return (
