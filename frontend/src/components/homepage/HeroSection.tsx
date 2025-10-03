@@ -1,5 +1,8 @@
-import { useEffect, useRef } from 'react';
-import * as THREE from 'three';
+import { useEffect, useRef } from "react";
+import * as THREE from "three";
+import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
+import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
+import { UnrealBloomPass } from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
 
 const HeroSection = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -7,10 +10,15 @@ const HeroSection = () => {
   useEffect(() => {
     if (!canvasRef.current) return;
 
-    // Scene setup
+    // Scene
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, canvasRef.current.clientWidth / canvasRef.current.clientHeight, 0.1, 1000);
-    camera.position.z = 15;
+    const camera = new THREE.PerspectiveCamera(
+      75,
+      canvasRef.current.clientWidth / canvasRef.current.clientHeight,
+      0.1,
+      1000
+    );
+    camera.position.z = 25;
 
     const renderer = new THREE.WebGLRenderer({
       canvas: canvasRef.current,
@@ -20,118 +28,104 @@ const HeroSection = () => {
     renderer.setSize(canvasRef.current.clientWidth, canvasRef.current.clientHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
-    // Create floating geometric shapes representing farm products
-    const geometries = [
-      new THREE.SphereGeometry(1, 16, 16),    // Fruits
-      new THREE.CylinderGeometry(0.8, 0.8, 2, 16), // Vegetables
-      new THREE.BoxGeometry(1.5, 1.5, 1.5),   // Packages
-      new THREE.DodecahedronGeometry(1, 0),   // Organic shapes
-    ];
+    // Postprocessing composer
+    const composer = new EffectComposer(renderer);
+    composer.addPass(new RenderPass(scene, camera));
 
-    const materials = [
-      new THREE.MeshPhongMaterial({ color: 0x4ade80, transparent: true, opacity: 0.8 }), // Green
-      new THREE.MeshPhongMaterial({ color: 0xf59e0b, transparent: true, opacity: 0.8 }), // Amber
-      new THREE.MeshPhongMaterial({ color: 0x84cc16, transparent: true, opacity: 0.8 }), // Lime
-      new THREE.MeshPhongMaterial({ color: 0x22c55e, transparent: true, opacity: 0.8 }), // Emerald
-    ];
+    // Bloom glow effect
+    const bloomPass = new UnrealBloomPass(
+      new THREE.Vector2(window.innerWidth, window.innerHeight),
+      1.2, // intensity
+      0.6,
+      0.85
+    );
+    composer.addPass(bloomPass);
 
-    const objects: THREE.Mesh[] = [];
-    const objectCount = 12;
+    // Particles (like floating grains in sunlight)
+    const particlesGeometry = new THREE.BufferGeometry();
+    const particlesCount = 1000;
+    const positions = new Float32Array(particlesCount * 3);
 
-    for (let i = 0; i < objectCount; i++) {
-      const geometry = geometries[Math.floor(Math.random() * geometries.length)];
-      const material = materials[Math.floor(Math.random() * materials.length)].clone();
-      
-      const mesh = new THREE.Mesh(geometry, material);
-      
-      // Position objects in a sphere
-      const radius = 8 + Math.random() * 4;
-      const theta = Math.random() * Math.PI * 2;
-      const phi = Math.random() * Math.PI;
-      
-      mesh.position.x = radius * Math.sin(phi) * Math.cos(theta);
-      mesh.position.y = radius * Math.sin(phi) * Math.sin(theta);
-      mesh.position.z = radius * Math.cos(phi);
-      
-      mesh.rotation.x = Math.random() * Math.PI;
-      mesh.rotation.y = Math.random() * Math.PI;
-      
-      scene.add(mesh);
-      objects.push(mesh);
+    for (let i = 0; i < particlesCount * 3; i++) {
+      positions[i] = (Math.random() - 0.5) * 80; // spread
     }
 
-    // Lighting
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    particlesGeometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
+
+    const particlesMaterial = new THREE.PointsMaterial({
+      color: 0xfacc15, // warm golden (like grain dust)
+      size: 0.5,
+      transparent: true,
+      opacity: 0.7,
+    });
+
+    const particles = new THREE.Points(particlesGeometry, particlesMaterial);
+    scene.add(particles);
+
+    // Light
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
     scene.add(ambientLight);
 
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    directionalLight.position.set(5, 5, 5);
+    const directionalLight = new THREE.DirectionalLight(0xfff3c4, 1);
+    directionalLight.position.set(10, 20, 10);
     scene.add(directionalLight);
 
-    // Mouse interaction
+    // Mouse interaction (parallax effect)
     let mouseX = 0;
     let mouseY = 0;
-    
     const handleMouseMove = (event: MouseEvent) => {
       mouseX = (event.clientX / window.innerWidth) * 2 - 1;
       mouseY = -(event.clientY / window.innerHeight) * 2 + 1;
     };
-    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener("mousemove", handleMouseMove);
 
-    // Animation
+    // Animate
     const clock = new THREE.Clock();
-    
+
     const animate = () => {
       requestAnimationFrame(animate);
       const elapsedTime = clock.getElapsedTime();
 
-      // Animate objects
-      objects.forEach((object, index) => {
-        const speed = 0.2 + index * 0.05;
-        object.rotation.x += 0.01;
-        object.rotation.y += 0.008;
-        
-        // Floating animation
-        object.position.y += Math.sin(elapsedTime * speed + index) * 0.01;
-      });
+      // Floating particle motion
+      particles.rotation.y = elapsedTime * 0.05;
+      particles.rotation.x = Math.sin(elapsedTime * 0.1) * 0.05;
 
-      // Camera movement based on mouse
-      camera.position.x += (mouseX * 3 - camera.position.x) * 0.05;
-      camera.position.y += (mouseY * 3 - camera.position.y) * 0.05;
+      // Camera parallax
+      camera.position.x += (mouseX * 5 - camera.position.x) * 0.05;
+      camera.position.y += (mouseY * 5 - camera.position.y) * 0.05;
       camera.lookAt(scene.position);
 
-      renderer.render(scene, camera);
+      composer.render();
     };
 
     animate();
 
-    // Handle resize
+    // Resize handling
     const handleResize = () => {
       if (canvasRef.current) {
         camera.aspect = canvasRef.current.clientWidth / canvasRef.current.clientHeight;
         camera.updateProjectionMatrix();
         renderer.setSize(canvasRef.current.clientWidth, canvasRef.current.clientHeight);
+        composer.setSize(canvasRef.current.clientWidth, canvasRef.current.clientHeight);
       }
     };
-    window.addEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
 
     return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('resize', handleResize);
+      window.removeEventListener("mousemove", handleMouseMove);
+      window.removeEventListener("resize", handleResize);
       renderer.dispose();
-      geometries.forEach(geom => geom.dispose());
-      materials.forEach(mat => mat.dispose());
     };
   }, []);
 
   return (
     <div className="relative bg-white min-h-screen overflow-hidden">
-      {/* Background with subtle pattern */}
-      <div className="absolute inset-0 bg-gradient-to-br from-gray-50 to-gray-100">
-        <div className="absolute inset-0 opacity-5 bg-[radial-gradient(#000000_1px,transparent_1px)] [background-size:16px_16px]" />
+      {/* Background gradient */}
+      <div className="absolute inset-0 bg-gradient-to-br from-green-50 to-yellow-100">
+        <div className="absolute inset-0 opacity-10 bg-[radial-gradient(#000000_1px,transparent_1px)] [background-size:18px_18px]" />
       </div>
-      
-      {/* 3D Canvas */}
+
+      {/* Three.js Canvas */}
       <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />
 
       {/* Content */}
@@ -142,12 +136,12 @@ const HeroSection = () => {
               Fresh Farm Products
               <span className="block text-green-600 mt-2">Direct to You</span>
             </h1>
-            
+
             <p className="text-lg md:text-xl text-gray-600 mb-8 leading-relaxed">
-              Source the finest produce, dairy, and meats directly from local farms. 
+              Source the finest produce, dairy, and meats directly from local farms.
               Quality you can taste, from farmers you can trust.
             </p>
-            
+
             <div className="flex flex-col sm:flex-row gap-4 max-w-lg">
               <input
                 type="text"
@@ -158,17 +152,17 @@ const HeroSection = () => {
                 Search
               </button>
             </div>
-            
+
             <p className="mt-6 text-sm text-gray-500">
-              Popular: {' '}
+              Popular:{" "}
               <button className="text-green-600 hover:text-green-700 font-medium transition-colors">
                 Organic Vegetables
               </button>
-              , {' '}
+              ,{" "}
               <button className="text-green-600 hover:text-green-700 font-medium transition-colors">
                 Fresh Eggs
               </button>
-              , {' '}
+              ,{" "}
               <button className="text-green-600 hover:text-green-700 font-medium transition-colors">
                 Dairy Products
               </button>
