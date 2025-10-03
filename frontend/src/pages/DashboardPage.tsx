@@ -1,17 +1,21 @@
-import  { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthenticationContext';
 
+// --- 1. Updated Interfaces to include more details ---
 interface Product {
   _id: string;
   name: string;
   price: string;
   category: string;
+  imageUrl: string;
+  buyType: 'direct_buy' | 'auction';
+  currentPrice?: number;
 }
 
 interface Order {
   _id: string;
-  customerDetails: { name: string };
+  customerDetails: { name: string; email: string };
   totalAmount: number;
   status: 'Pending' | 'Shipped' | 'Delivered';
   createdAt: string;
@@ -35,14 +39,11 @@ const FarmerDashboard = () => {
         fetch(`http://localhost:5000/api/dashboard/products/${user.name}`),
         fetch(`http://localhost:5000/api/dashboard/orders/${user.name}`)
       ]);
-
       if (!productsResponse.ok || !ordersResponse.ok) {
         throw new Error('Failed to fetch dashboard data.');
       }
-
       const productsData = await productsResponse.json();
       const ordersData = await ordersResponse.json();
-
       setMyProducts(productsData);
       setMyOrders(ordersData);
     } catch (err: any) {
@@ -70,6 +71,28 @@ const FarmerDashboard = () => {
     }
   };
 
+  // --- 2. New function to handle order status updates and trigger emails ---
+  const handleStatusChange = async (orderId: string, newStatus: Order['status']) => {
+    try {
+      const response = await fetch(`http://localhost:5000/api/orders/${orderId}/status`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: newStatus }),
+      });
+      if (!response.ok) throw new Error('Failed to update order status.');
+      
+      // Update the status in the local state for an immediate UI response
+      setMyOrders(prevOrders => 
+        prevOrders.map(order => 
+          order._id === orderId ? { ...order, status: newStatus } : order
+        )
+      );
+    } catch (err: any) {
+      setError(err.message);
+      // Optional: Add a user-friendly error alert here
+    }
+  };
+
   const renderContent = () => {
     if (loading) return <div className="text-center p-8">Loading dashboard...</div>;
     if (error) return <div className="text-center p-8 text-red-600">{error}</div>;
@@ -81,8 +104,10 @@ const FarmerDashboard = () => {
             <table className="min-w-full divide-y divide-gray-200">
               <thead className="bg-gray-50">
                 <tr>
+                  {/* 3. Added Image column */}
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Image</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Product</th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Price / Bid</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
                   <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Actions</th>
                 </tr>
@@ -90,8 +115,17 @@ const FarmerDashboard = () => {
               <tbody className="bg-white divide-y divide-gray-200">
                 {myProducts.length > 0 ? myProducts.map(product => (
                   <tr key={product._id}>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <img src={product.imageUrl || 'https://placehold.co/40x40'} alt={product.name} className="w-10 h-10 rounded-full object-cover" />
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{product.name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{product.price}</td>
+                    {/* 4. Price column now shows live bid for auctions */}
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {product.buyType === 'auction' 
+                        ? `₹${product.currentPrice} (Bid)`
+                        : product.price
+                      }
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{product.category}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-4">
                       <button className="text-green-600 hover:text-green-900">Edit</button>
@@ -99,7 +133,7 @@ const FarmerDashboard = () => {
                     </td>
                   </tr>
                 )) : (
-                  <tr><td colSpan={4} className="text-center p-8 text-gray-500">You haven't added any products yet.</td></tr>
+                  <tr><td colSpan={5} className="text-center p-8 text-gray-500">You haven't added any products yet.</td></tr>
                 )}
               </tbody>
             </table>
@@ -120,6 +154,8 @@ const FarmerDashboard = () => {
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                  {/* 5. Added Update Status column */}
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Update Status</th>
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
@@ -138,9 +174,20 @@ const FarmerDashboard = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{new Date(order.createdAt).toLocaleDateString()}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">
+                      <select 
+                        value={order.status}
+                        onChange={(e) => handleStatusChange(order._id, e.target.value as Order['status'])}
+                        className="p-1 border border-gray-300 rounded-md focus:ring-green-500"
+                      >
+                        <option value="Pending">Pending</option>
+                        <option value="Shipped">Shipped</option>
+                        <option value="Delivered">Delivered</option>
+                      </select>
+                    </td>
                   </tr>
                 )) : (
-                  <tr><td colSpan={5} className="text-center p-8 text-gray-500">You have no incoming orders.</td></tr>
+                  <tr><td colSpan={6} className="text-center p-8 text-gray-500">You have no incoming orders.</td></tr>
                 )}
               </tbody>
             </table>
@@ -176,4 +223,3 @@ const FarmerDashboard = () => {
 };
 
 export default FarmerDashboard;
-

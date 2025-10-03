@@ -24,6 +24,7 @@ const SellYourProduct = () => {
     buyType: 'direct_buy',
     price: '',
     startingBid: '',
+    auctionStartTime: '',
     auctionEndTime: '',
   });
   const [error, setError] = useState('');
@@ -126,6 +127,10 @@ const SellYourProduct = () => {
           {formData.buyType === 'auction' && (
             <div className="space-y-4 p-4 border rounded-md bg-gray-50">
               <input name="startingBid" value={formData.startingBid} onChange={handleChange} placeholder="Starting Bid (e.g., 100)" type="number" required className="w-full p-3 border rounded-md"/>
+              <div>
+                 <label className="block text-sm font-medium text-gray-700 mb-1">Auction Start Time</label>
+                 <input name="auctionStartTime" value={formData.auctionStartTime} onChange={handleChange} type="datetime-local" required className="w-full p-3 border rounded-md"/>
+              </div>
               <div>
                  <label className="block text-sm font-medium text-gray-700 mb-1">Auction End Time</label>
                  <input name="auctionEndTime" value={formData.auctionEndTime} onChange={handleChange} type="datetime-local" required className="w-full p-3 border rounded-md"/>

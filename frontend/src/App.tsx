@@ -18,6 +18,8 @@ import UploadProductPage from './pages/SellYourProduct';
 import FarmerDashboard from './pages/DashboardPage';
 import FarmersTechTools from './pages/FarmersArea';
 import AnimalProducts from './components/homepage/AnimalProducts'; 
+import RentToolsPage from './pages/RentToolsPage';
+import ToolDetailPage from './pages/ToolDetailPage';
 const NotFound = () => <div className="p-8 text-center min-h-screen"><h1>404 - Page Not Found</h1></div>;
 
 const App = () => {
@@ -39,6 +41,9 @@ const App = () => {
           <Route path="/upload-product" element={<UploadProductPage />} />
           <Route path="/dashboard" element={<FarmerDashboard />} />
           <Route path="/farmers-area" element={<FarmersTechTools />} />
+
+          <Route path="/rent-tools" element={<RentToolsPage />} />
+          <Route path="/rent-tools/:toolId" element={<ToolDetailPage />} /> 
 
           <Route path="/cart" element={<CartPage />} /> 
           <Route path="/checkout" element={<CheckoutPage />} />

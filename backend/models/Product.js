@@ -17,7 +17,6 @@ const productSchema = new mongoose.Schema({
     type: String, 
     required: true
   },
-  
   category: {
     type: String,
     required: true,
@@ -30,7 +29,6 @@ const productSchema = new mongoose.Schema({
       'Plants & Flowers'
     ]
   },
-  
   subCategory: {
     type: String,
   },
@@ -56,6 +54,42 @@ const productSchema = new mongoose.Schema({
     type: Number,
     required: function() { return this.buyType === 'auction'; }
   },
+  currentPrice: {
+    type: Number,
+  },
+  highestBidder: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  bids: [
+    {
+      bidder: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true
+      },
+      amount: {
+        type: Number,
+        required: true
+      },
+      timestamp: {
+        type: Date,
+        default: Date.now
+      }
+    }
+  ],
+  inStock: {
+    type: Boolean,
+    default: true
+  },
+  organic: {
+    type: Boolean,
+    default: false
+  },
+  rating: {
+    type: Number,
+    default: 0
+  }
 }, {
   timestamps: true 
 });
