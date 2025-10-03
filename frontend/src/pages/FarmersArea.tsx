@@ -75,7 +75,7 @@ const FarmersTechTools = () => {
   const [userLocation, setUserLocation] = useState<{ lat: number; lon: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [apiKeys, setApiKeys] = useState({
-    openai: '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',
+    openai: '',
   });
 
   // Get user's current location
