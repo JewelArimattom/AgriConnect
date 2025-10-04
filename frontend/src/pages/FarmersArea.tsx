@@ -100,9 +100,6 @@ const FarmersTechTools = () => {
     lon: number;
   } | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [apiKeys, setApiKeys] = useState({
-    openai: "",
-  });
 
   // Get user's current location
   useEffect(() => {
@@ -115,7 +112,7 @@ const FarmersTechTools = () => {
           });
           getLocationName(position.coords.latitude, position.coords.longitude);
         },
-        (error) => {
+        () => {
           console.log("Location access denied");
         }
       );
@@ -149,62 +146,98 @@ const FarmersTechTools = () => {
     setWeatherData(mockWeather);
   }, []);
 
-  // Simple AI API call function using OpenAI
-  const callOpenAI = async (prompt: string) => {
-    try {
-      if (!apiKeys.openai) {
-        throw new Error("No OpenAI API key provided");
-      }
+  // Gemini AI API call function with fallback models
+  const callGeminiAPI = async (prompt: string) => {
+    const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 
-      const response = await fetch(
-        "https://api.openai.com/v1/chat/completions",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${apiKeys.openai}`,
-          },
-          body: JSON.stringify({
-            model: "gpt-3.5-turbo",
-            messages: [
-              {
-                role: "system",
-                content:
-                  "You are an agricultural expert. Always respond with valid JSON only, no other text.",
-              },
-              {
-                role: "user",
-                content: prompt,
-              },
-            ],
-            temperature: 0.7,
-            max_tokens: 2000,
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`API Error: ${response.status}`);
-      }
-
-      const data = await response.json();
-      const content = data.choices[0].message.content;
-
-      try {
-        return JSON.parse(content);
-      } catch (parseError) {
-        const jsonMatch =
-          content.match(/```json\n([\s\S]*?)\n```/) ||
-          content.match(/```\n([\s\S]*?)\n```/);
-        if (jsonMatch) {
-          return JSON.parse(jsonMatch[1]);
-        }
-        throw new Error("Failed to parse JSON response");
-      }
-    } catch (error) {
-      console.error("OpenAI API Error:", error);
-      throw error;
+    if (!GEMINI_API_KEY) {
+      throw new Error("Gemini API key not found in environment variables");
     }
+
+    const models = [
+      "gemini-2.0-flash-lite", // Primary model (lite)
+      "gemini-1.5-flash", // Fallback model
+    ];
+
+    for (const model of models) {
+      try {
+        console.log(`Trying Gemini model: ${model}`);
+
+        const response = await fetch(
+          `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              contents: [
+                {
+                  parts: [
+                    {
+                      text: prompt,
+                    },
+                  ],
+                },
+              ],
+              generationConfig: {
+                temperature: 0.7,
+                topK: 40,
+                topP: 0.95,
+                maxOutputTokens: 2048,
+              },
+            }),
+          }
+        );
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.warn(`Model ${model} failed:`, errorData);
+          continue; // Try next model
+        }
+
+        const data = await response.json();
+
+        if (
+          !data.candidates ||
+          !data.candidates[0] ||
+          !data.candidates[0].content
+        ) {
+          console.warn(`Model ${model} returned invalid response structure`);
+          continue; // Try next model
+        }
+
+        const content = data.candidates[0].content.parts[0].text;
+
+        // Clean up the response to extract JSON
+        let cleanedContent = content.trim();
+
+        // Remove markdown code blocks if present
+        const jsonMatch = cleanedContent.match(/```(?:json)?\n?([\s\S]*?)```/);
+        if (jsonMatch) {
+          cleanedContent = jsonMatch[1].trim();
+        }
+
+        // Try to parse the JSON
+        try {
+          const parsed = JSON.parse(cleanedContent);
+          console.log(`Successfully used model: ${model}`);
+          return parsed;
+        } catch (parseError) {
+          console.error(
+            `Model ${model} returned invalid JSON:`,
+            cleanedContent
+          );
+          continue; // Try next model
+        }
+      } catch (error) {
+        console.error(`Error with model ${model}:`, error);
+        continue; // Try next model
+      }
+    }
+
+    // If all models fail, throw an error to trigger mock data fallback
+    throw new Error("All Gemini models failed to respond properly");
   };
 
   // Fetch market prices
@@ -213,36 +246,34 @@ const FarmersTechTools = () => {
     setError(null);
 
     try {
-      if (apiKeys.openai) {
-        const prompt = `As an agricultural market analyst, provide current market prices and trends for various farming commodities including crops, animals, plants, and agricultural anime merchandise. Focus on ${
-          location || "India"
-        }. 
-        
-        Provide response in this exact JSON format:
-        [
-          {
-            "commodity": "Product Name",
-            "category": "Crop/Animal/Plant/Anime/Other",
-            "currentPrice": 150,
-            "unit": "kg/liter/piece",
-            "priceChange": 15,
-            "priceChangePercent": 10.5,
-            "market": "Market Name",
-            "demand": "High/Medium/Low",
-            "trend": "Up/Down/Stable",
-            "lastUpdated": "2024-01-15",
-            "description": "Brief market analysis"
-          }
-        ]`;
+      const prompt = `You are an agricultural market analyst. Provide current market prices and trends for various farming commodities including crops, animals, plants, and agricultural merchandise for ${
+        location || "India"
+      }.
 
-        const prices = await callOpenAI(prompt);
-        if (prices && Array.isArray(prices)) {
-          setMarketPrices(prices);
-        } else {
-          throw new Error("Failed to parse market data");
-        }
+Provide your response ONLY as a valid JSON array with exactly this structure (no additional text, no markdown, just the JSON array):
+[
+  {
+    "commodity": "Product Name",
+    "category": "Crop" or "Animal" or "Plant" or "Other",
+    "currentPrice": 150,
+    "unit": "kg" or "liter" or "piece" or "animal",
+    "priceChange": 15,
+    "priceChangePercent": 10.5,
+    "market": "Market Name",
+    "demand": "High" or "Medium" or "Low",
+    "trend": "Up" or "Down" or "Stable",
+    "lastUpdated": "2024-10-05",
+    "description": "Brief 1-2 sentence market analysis"
+  }
+]
+
+Provide at least 8 diverse commodities including crops, animals, and plants.`;
+
+      const prices = await callGeminiAPI(prompt);
+      if (prices && Array.isArray(prices) && prices.length > 0) {
+        setMarketPrices(prices);
       } else {
-        throw new Error("No API key provided");
+        throw new Error("Invalid response format from AI");
       }
     } catch (error) {
       console.error("Error fetching market prices:", error);
@@ -365,7 +396,7 @@ const FarmersTechTools = () => {
   // AI-Powered Crop Recommendation
   const getAICropRecommendations = async () => {
     if (!soilType || !season) {
-      setError("Please fill in all required fields");
+      setError("Please fill in all required fields (Soil Type and Season)");
       return;
     }
 
@@ -373,36 +404,179 @@ const FarmersTechTools = () => {
     setError(null);
 
     try {
-      if (apiKeys.openai) {
-        const prompt = `As an agricultural expert, recommend the top 5 crops for farming with these conditions:
-        Location: ${location || "India"}
-        Soil Type: ${soilType}
-        Season: ${season}
-        Land Size: ${landSize || "Not specified"} acres
-        
-        Provide response in this exact JSON format:
-        [
-          {
-            "name": "Crop Name",
-            "season": "Best Season",
-            "duration": "X-Y days",
-            "profitMargin": "X-Y%",
-            "risk": "Low/Medium/High",
-            "waterRequirements": "Low/Moderate/High",
-            "marketDemand": "High/Medium/Low",
-            "suitability": 85,
-            "description": "Brief description of why this crop is suitable"
-          }
-        ]`;
+      const prompt = `You are an expert agricultural advisor with deep knowledge of regional farming practices across India. Based on the following farming conditions, recommend the top 5 most suitable crops, prioritizing crops that are traditionally grown and commercially successful in the specified region.
 
-        const recommendations = await callOpenAI(prompt);
-        if (recommendations && Array.isArray(recommendations)) {
-          setCropRecommendations(recommendations);
-        } else {
-          throw new Error("Failed to parse recommendations");
-        }
+Farming Conditions:
+- Location: ${location || "India"}
+- Soil Type: ${soilType}
+- Season: ${season}
+- Land Size: ${landSize || "Not specified"} acres
+
+Regional Crop Preferences (IMPORTANT):
+${
+  location
+    ? `For ${location}, consider these regional specialties and traditional crops:`
+    : "Consider pan-India crops with regional adaptations:"
+}
+${
+  location?.toLowerCase().includes("kerala")
+    ? `
+- Kerala specialties: Coconut, Rubber, Tea, Coffee, Pepper, Cardamom, Banana, Pineapple, Tapioca, Rice, Cashew, Arecanut
+- Traditional crops: Rice (paddy), Coconut, Banana, Tapioca, Vegetables like bitter gourd, drumstick, snake gourd
+- Commercial crops: Rubber, Tea, Coffee, Pepper, Cardamom, Pineapple, Ginger, Turmeric`
+    : ""
+}
+
+${
+  location?.toLowerCase().includes("tamil") ||
+  location?.toLowerCase().includes("tamil nadu")
+    ? `
+- Tamil Nadu specialties: Rice, Sugarcane, Cotton, Groundnut, Coconut, Tea, Coffee, Banana, Mango, Cashew
+- Traditional crops: Rice, Sugarcane, Cotton, Groundnut, Coconut, Banana, Mango
+- Commercial crops: Rice, Sugarcane, Cotton, Groundnut, Tea, Coffee, Cashew`
+    : ""
+}
+
+${
+  location?.toLowerCase().includes("karnataka")
+    ? `
+- Karnataka specialties: Coffee, Tea, Sugarcane, Cotton, Rice, Ragi, Jowar, Groundnut, Coconut, Mango, Cashew
+- Traditional crops: Rice, Ragi, Jowar, Groundnut, Sugarcane, Cotton
+- Commercial crops: Coffee, Tea, Sugarcane, Cotton, Cashew, Mango`
+    : ""
+}
+
+${
+  location?.toLowerCase().includes("maharashtra")
+    ? `
+- Maharashtra specialties: Sugarcane, Cotton, Soybean, Rice, Wheat, Jowar, Bajra, Groundnut, Orange, Grapes
+- Traditional crops: Cotton, Sugarcane, Soybean, Rice, Wheat, Jowar, Bajra
+- Commercial crops: Sugarcane, Cotton, Soybean, Grapes, Orange, Pomegranate`
+    : ""
+}
+
+${
+  location?.toLowerCase().includes("punjab") ||
+  location?.toLowerCase().includes("haryana")
+    ? `
+- Punjab/Haryana specialties: Wheat, Rice, Cotton, Sugarcane, Maize, Potato, Mustard, Barley
+- Traditional crops: Wheat, Rice, Cotton, Sugarcane, Maize, Mustard
+- Commercial crops: Wheat, Rice, Cotton, Sugarcane, Potato, Mustard`
+    : ""
+}
+
+${
+  location?.toLowerCase().includes("rajasthan")
+    ? `
+- Rajasthan specialties: Mustard, Wheat, Barley, Bajra, Guar, Rapeseed, Moth bean, Cluster bean, Cumin, Coriander
+- Traditional crops: Mustard, Wheat, Barley, Bajra, Guar, Rapeseed
+- Commercial crops: Mustard, Guar, Cumin, Coriander, Moth bean, Cluster bean`
+    : ""
+}
+
+${
+  location?.toLowerCase().includes("gujarat")
+    ? `
+- Gujarat specialties: Cotton, Groundnut, Wheat, Rice, Sugarcane, Maize, Castor, Sesame, Cumin, Fennel
+- Traditional crops: Cotton, Groundnut, Wheat, Rice, Sugarcane, Maize
+- Commercial crops: Cotton, Groundnut, Castor, Cumin, Sesame, Fennel`
+    : ""
+}
+
+${
+  location?.toLowerCase().includes("west bengal") ||
+  location?.toLowerCase().includes("bengal")
+    ? `
+- West Bengal specialties: Rice, Jute, Tea, Potato, Sugarcane, Wheat, Maize, Mustard, Pineapple, Mango
+- Traditional crops: Rice, Jute, Potato, Sugarcane, Wheat, Mustard
+- Commercial crops: Rice, Jute, Tea, Potato, Pineapple, Mango`
+    : ""
+}
+
+${
+  location?.toLowerCase().includes("uttar pradesh") ||
+  location?.toLowerCase().includes("uttar")
+    ? `
+- Uttar Pradesh specialties: Wheat, Rice, Sugarcane, Potato, Mustard, Maize, Barley, Gram, Lentils, Mango
+- Traditional crops: Wheat, Rice, Sugarcane, Potato, Mustard, Maize
+- Commercial crops: Sugarcane, Potato, Wheat, Rice, Mango, Mustard`
+    : ""
+}
+
+${
+  location?.toLowerCase().includes("bihar")
+    ? `
+- Bihar specialties: Rice, Wheat, Maize, Potato, Sugarcane, Lentils, Gram, Mustard, Mango, Litchi
+- Traditional crops: Rice, Wheat, Maize, Potato, Sugarcane, Lentils
+- Commercial crops: Rice, Wheat, Sugarcane, Potato, Mango, Litchi`
+    : ""
+}
+
+${
+  location?.toLowerCase().includes("madhya pradesh") ||
+  location?.toLowerCase().includes("madhya")
+    ? `
+- Madhya Pradesh specialties: Soybean, Wheat, Gram, Rice, Cotton, Mustard, Maize, Groundnut, Garlic, Onion
+- Traditional crops: Soybean, Wheat, Gram, Rice, Cotton, Mustard
+- Commercial crops: Soybean, Wheat, Gram, Cotton, Garlic, Onion`
+    : ""
+}
+
+${
+  location?.toLowerCase().includes("andhra") ||
+  location?.toLowerCase().includes("telangana")
+    ? `
+- Andhra Pradesh/Telangana specialties: Rice, Cotton, Sugarcane, Maize, Groundnut, Mango, Tobacco, Chili, Turmeric
+- Traditional crops: Rice, Cotton, Sugarcane, Maize, Groundnut, Mango
+- Commercial crops: Rice, Cotton, Mango, Chili, Turmeric, Tobacco`
+    : ""
+}
+
+${
+  !location || location.toLowerCase() === "india"
+    ? `
+- Pan-India crops: Rice, Wheat, Cotton, Sugarcane, Maize, Groundnut, Mustard, Potato, Onion, Tomato
+- Consider regional adaptations based on soil and climate conditions`
+    : ""
+}
+
+Provide your response ONLY as a valid JSON array with exactly this structure (no additional text, no markdown, just the JSON array):
+[
+  {
+    "name": "Crop Name",
+    "season": "Ideal/Possible/Not Recommended",
+    "duration": "X-Y days",
+    "profitMargin": "X-Y%",
+    "risk": "Low" or "Medium" or "High",
+    "waterRequirements": "Low" or "Moderate" or "High",
+    "marketDemand": "High" or "Medium" or "Low",
+    "suitability": number between 1-100,
+    "description": "2-3 sentence description explaining why this crop is suitable for the given conditions, including regional context"
+  }
+]
+
+Ensure:
+1. Prioritize crops traditionally grown in the specified region/state
+2. Suitability score reflects how well the crop matches the region, soil type, and season
+3. Include at least 2-3 regional specialty crops in the top 5 recommendations
+4. Recommendations are sorted by suitability (highest first)
+5. All fields use the exact format specified above
+6. Response is valid JSON that can be parsed directly`;
+
+      const recommendations = await callGeminiAPI(prompt);
+
+      if (
+        recommendations &&
+        Array.isArray(recommendations) &&
+        recommendations.length > 0
+      ) {
+        // Sort by suitability score descending
+        const sortedRecommendations = recommendations.sort(
+          (a, b) => b.suitability - a.suitability
+        );
+        setCropRecommendations(sortedRecommendations);
       } else {
-        throw new Error("No API key provided");
+        throw new Error("Invalid response format from AI");
       }
     } catch (error) {
       console.error("Error fetching AI recommendations:", error);
@@ -583,30 +757,28 @@ const FarmersTechTools = () => {
     setError(null);
 
     try {
-      if (apiKeys.openai) {
-        const prompt = `Create a comprehensive planting guide for ${cropName} with the following structure:
-        
-        Provide response in exact JSON format:
-        {
-          "crop": "${cropName}",
-          "soilType": ["array of soil requirements"],
-          "plantingSeason": "best planting season",
-          "spacing": "plant spacing details",
-          "watering": "watering requirements",
-          "fertilization": "fertilization schedule",
-          "harvesting": "harvesting information",
-          "companionPlants": ["list of companion plants"],
-          "tips": ["array of expert tips"]
-        }`;
+      const prompt = `You are an expert agricultural advisor. Create a comprehensive planting guide for ${cropName}.
 
-        const guide = await callOpenAI(prompt);
-        if (guide && typeof guide === "object") {
-          setPlantingGuide(guide);
-        } else {
-          throw new Error("Failed to generate planting guide");
-        }
+Provide your response ONLY as a valid JSON object with exactly this structure (no additional text, no markdown, just the JSON object):
+{
+  "crop": "${cropName}",
+  "soilType": ["soil requirement 1", "soil requirement 2", "soil requirement 3", "soil requirement 4"],
+  "plantingSeason": "best planting season with months",
+  "spacing": "plant spacing details",
+  "watering": "watering requirements and schedule",
+  "fertilization": "fertilization schedule and nutrients",
+  "harvesting": "harvesting timeframe and methods",
+  "companionPlants": ["plant1", "plant2", "plant3", "plant4"],
+  "tips": ["expert tip 1", "expert tip 2", "expert tip 3", "expert tip 4", "expert tip 5"]
+}
+
+Ensure all fields are filled with detailed, practical information specific to ${cropName}.`;
+
+      const guide = await callGeminiAPI(prompt);
+      if (guide && typeof guide === "object" && guide.crop) {
+        setPlantingGuide(guide);
       } else {
-        throw new Error("No API key provided");
+        throw new Error("Invalid response format from AI");
       }
     } catch (error) {
       console.error("Error fetching planting guide:", error);
