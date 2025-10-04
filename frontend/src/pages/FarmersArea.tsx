@@ -649,7 +649,7 @@ Ensure:
     setLoading(false);
   };
 
-  // AI Disease Detection
+  // AI Disease Detection with Image Analysis
   const analyzeDiseaseWithAI = async () => {
     if (!diseaseImage) return;
 
@@ -657,94 +657,225 @@ Ensure:
     setError(null);
 
     try {
-      // For image analysis, we would need a more complex setup
-      // Using mock data for demonstration
+      // Convert image to base64
+      const imageToBase64 = (file: File): Promise<string> => {
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => {
+            const result = reader.result as string;
+            // Remove the data:image/jpeg;base64, prefix
+            const base64 = result.split(",")[1];
+            resolve(base64);
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+        });
+      };
+
+      const imageBase64 = await imageToBase64(diseaseImage);
+
+      const prompt = `You are an expert plant pathologist and agricultural disease specialist. Analyze this plant image and identify any diseases or health issues.
+
+Please provide your response ONLY as a valid JSON object with exactly this structure (no additional text, no markdown, just the JSON object):
+{
+  "name": "Disease Name (e.g., Early Blight, Powdery Mildew, Leaf Spot)",
+  "confidence": 85,
+  "symptoms": [
+    "Symptom description 1",
+    "Symptom description 2",
+    "Symptom description 3",
+    "Symptom description 4"
+  ],
+  "treatment": [
+    "Treatment recommendation 1",
+    "Treatment recommendation 2",
+    "Treatment recommendation 3",
+    "Treatment recommendation 4",
+    "Treatment recommendation 5"
+  ],
+  "prevention": [
+    "Prevention measure 1",
+    "Prevention measure 2",
+    "Prevention measure 3",
+    "Prevention measure 4",
+    "Prevention measure 5"
+  ],
+  "scientificName": "Scientific name of the pathogen (e.g., Alternaria solani, Erysiphales order)"
+}
+
+Guidelines for analysis:
+1. Focus on common agricultural diseases affecting crops like tomatoes, potatoes, rice, wheat, etc.
+2. Provide confidence percentage based on visual symptoms (70-95 range)
+3. Include 4-5 specific symptoms observed or typically associated
+4. Provide 4-5 practical treatment recommendations
+5. Include 4-5 prevention measures
+6. Use proper scientific nomenclature when possible
+7. If no disease is detected, classify as "Healthy Plant" with confidence 90-95%
+8. Consider regional context if location is available: ${location || "India"}
+
+Analyze the image carefully and provide accurate, helpful agricultural advice.`;
+
+      const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+
+      if (!GEMINI_API_KEY) {
+        throw new Error("Gemini API key not found in environment variables");
+      }
+
+      const models = [
+        "gemini-2.5-flash-lite", // Primary model for vision analysis
+        "gemini-2.5-flash", // Fallback model
+      ];
+
+      let diseaseResult = null;
+
+      for (const model of models) {
+        try {
+          console.log(`Trying Gemini model: ${model} for image analysis`);
+
+          const response = await fetch(
+            `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${GEMINI_API_KEY}`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                contents: [
+                  {
+                    parts: [
+                      {
+                        text: prompt,
+                      },
+                      {
+                        inlineData: {
+                          mimeType: diseaseImage.type,
+                          data: imageBase64,
+                        },
+                      },
+                    ],
+                  },
+                ],
+                generationConfig: {
+                  temperature: 0.4,
+                  topK: 32,
+                  topP: 0.8,
+                  maxOutputTokens: 2048,
+                },
+              }),
+            }
+          );
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            console.warn(`Model ${model} failed:`, errorData);
+            continue; // Try next model
+          }
+
+          const data = await response.json();
+
+          if (
+            !data.candidates ||
+            !data.candidates[0] ||
+            !data.candidates[0].content
+          ) {
+            console.warn(`Model ${model} returned invalid response structure`);
+            continue; // Try next model
+          }
+
+          const content = data.candidates[0].content.parts[0].text;
+
+          // Clean up the response to extract JSON
+          let cleanedContent = content.trim();
+
+          // Remove markdown code blocks if present
+          const jsonMatch = cleanedContent.match(
+            /```(?:json)?\n?([\s\S]*?)```/
+          );
+          if (jsonMatch) {
+            cleanedContent = jsonMatch[1].trim();
+          }
+
+          // Try to parse the JSON
+          try {
+            const parsed = JSON.parse(cleanedContent);
+
+            // Validate the structure
+            if (
+              parsed &&
+              typeof parsed === "object" &&
+              parsed.name &&
+              typeof parsed.confidence === "number" &&
+              Array.isArray(parsed.symptoms) &&
+              Array.isArray(parsed.treatment) &&
+              Array.isArray(parsed.prevention) &&
+              parsed.scientificName
+            ) {
+              diseaseResult = parsed;
+              console.log(
+                `Successfully used model: ${model} for image analysis`
+              );
+              break; // Success, exit the loop
+            } else {
+              console.warn(
+                `Model ${model} returned invalid JSON structure:`,
+                parsed
+              );
+              continue; // Try next model
+            }
+          } catch (parseError) {
+            console.error(
+              `Model ${model} returned invalid JSON:`,
+              cleanedContent
+            );
+            continue; // Try next model
+          }
+        } catch (error) {
+          console.error(`Error with model ${model}:`, error);
+          continue; // Try next model
+        }
+      }
+
+      if (diseaseResult) {
+        setDiseaseResult(diseaseResult);
+      } else {
+        throw new Error(
+          "All Gemini models failed to analyze the image properly"
+        );
+      }
+    } catch (error) {
+      console.error("Error analyzing disease:", error);
+      setError(
+        "Failed to analyze image. Please try again with a clearer photo."
+      );
+
+      // Fallback to mock data if AI fails
       const mockDiseases: Disease[] = [
         {
-          name: "Early Blight",
-          confidence: 87,
+          name: "Unable to Analyze",
+          confidence: 0,
           symptoms: [
-            "Dark brown spots with concentric rings on lower leaves",
-            "Yellowing around lesions",
-            "Premature leaf drop",
-            "Reduced fruit quality and yield",
+            "Image analysis failed",
+            "Please try uploading a clearer image",
+            "Ensure the plant parts are clearly visible",
+            "Avoid blurry or dark photos",
           ],
           treatment: [
-            "Apply copper-based fungicides every 7-10 days",
-            "Remove and destroy infected plant parts immediately",
-            "Ensure proper plant spacing for air circulation",
-            "Use drip irrigation to keep foliage dry",
-            "Apply neem oil as organic alternative",
+            "Upload a clearer image for better analysis",
+            "Ensure good lighting when taking photos",
+            "Focus on affected areas of the plant",
+            "Try different angles if possible",
           ],
           prevention: [
-            "Rotate crops every 2-3 years with non-solanaceous plants",
-            "Use disease-resistant varieties when available",
-            "Apply mulch to prevent soil splash onto leaves",
-            "Maintain balanced fertilization without excess nitrogen",
-            "Remove plant debris after harvest",
+            "Take clear, well-lit photos for accurate analysis",
+            "Include multiple views of affected areas",
+            "Avoid uploading very large files",
+            "Ensure the image shows plant symptoms clearly",
           ],
-          scientificName: "Alternaria solani",
-        },
-        {
-          name: "Powdery Mildew",
-          confidence: 92,
-          symptoms: [
-            "White powdery coating on leaves and stems",
-            "Yellowing and curling of leaves",
-            "Stunted plant growth",
-            "Reduced yield and fruit quality",
-          ],
-          treatment: [
-            "Apply sulfur-based fungicides early in the morning",
-            "Use neem oil spray (1-2% solution) every 7 days",
-            "Apply potassium bicarbonate solution",
-            "Prune and remove severely affected areas",
-            "Improve air circulation around plants",
-          ],
-          prevention: [
-            "Ensure adequate plant spacing for proper ventilation",
-            "Avoid overhead watering to keep foliage dry",
-            "Provide good air circulation in greenhouse settings",
-            "Plant resistant varieties when possible",
-            "Monitor humidity levels regularly",
-          ],
-          scientificName: "Erysiphales order",
-        },
-        {
-          name: "Leaf Spot Disease",
-          confidence: 78,
-          symptoms: [
-            "Circular brown spots with yellow halos",
-            "Spots merging to form large necrotic areas",
-            "Premature defoliation",
-            "Reduced photosynthetic activity",
-          ],
-          treatment: [
-            "Apply systemic fungicides containing azoxystrobin",
-            "Remove and burn infected leaves",
-            "Improve air circulation through proper pruning",
-            "Avoid overhead irrigation",
-            "Apply bio-fungicides like Trichoderma",
-          ],
-          prevention: [
-            "Use certified disease-free seeds",
-            "Practice crop rotation",
-            "Maintain proper plant nutrition",
-            "Avoid working with plants when wet",
-            "Sanitize gardening tools regularly",
-          ],
-          scientificName: "Cercospora species",
+          scientificName: "Analysis Failed",
         },
       ];
 
-      // Simulate API delay
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      setDiseaseResult(
-        mockDiseases[Math.floor(Math.random() * mockDiseases.length)]
-      );
-    } catch (error) {
-      console.error("Error analyzing disease:", error);
-      setError("Failed to analyze image. Please try again.");
+      setDiseaseResult(mockDiseases[0]);
     }
     setLoading(false);
   };
