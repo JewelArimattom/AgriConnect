@@ -304,49 +304,63 @@ app.post('/api/orders', async (req, res) => {
         // Validate required fields
         if (!customerDetails || !products || !totalAmount || !farmer) {
             return res.status(400).json({
-                message: 'Missing required fields for order creation'
+                message: 'Missing required fields',
+                details: 'Please provide customerDetails, products, totalAmount, and farmer'
             });
         }
 
         // Validate customer details
-        const requiredCustomerFields = ['name', 'email', 'phone'];
-        const missingFields = requiredCustomerFields.filter(field => !customerDetails[field]);
-        
-        if (missingFields.length > 0) {
+        if (!customerDetails.name || !customerDetails.email || !customerDetails.phone) {
             return res.status(400).json({
-                message: `Missing required customer details: ${missingFields.join(', ')}`
+                message: 'Missing customer details',
+                details: 'Name, email, and phone are required'
             });
         }
 
         // Validate products array
         if (!Array.isArray(products) || products.length === 0) {
             return res.status(400).json({
-                message: 'Order must contain at least one product'
+                message: 'Invalid products',
+                details: 'Products must be a non-empty array'
             });
         }
 
-        // Set default quantity if not provided
-        const processedProducts = products.map(product => ({
-            ...product,
-            quantity: product.quantity || 1
-        }));
+        // Format the order data
+        const orderData = {
+            customerDetails: {
+                name: customerDetails.name.trim(),
+                email: customerDetails.email.trim().toLowerCase(),
+                phone: customerDetails.phone.trim(),
+                preferredPickupTime: customerDetails.preferredPickupTime?.trim() || '',
+                paymentMethod: customerDetails.paymentMethod || 'pickup',
+                specialInstructions: customerDetails.specialInstructions?.trim() || ''
+            },
+            products: products.map(product => ({
+                productId: product.productId,
+                name: product.name.trim(),
+                price: Number(product.price),
+                quantity: Number(product.quantity) || 1
+            })),
+            totalAmount: Number(totalAmount),
+            farmer: farmer.trim(),
+            status: 'Confirmed'
+        };
 
-        const newOrder = new Order({
-            customerDetails,
-            products: processedProducts,
-            totalAmount,
-            farmer,
-            status: 'Pending'
+        // Create and save the order
+        const newOrder = new Order(orderData);
+        const savedOrder = await newOrder.save();
+
+        console.log('Order created successfully:', savedOrder._id);
+        res.status(201).json({
+            message: 'Order created successfully',
+            order: savedOrder
         });
-
-        const order = await newOrder.save();
-        res.status(201).json(order);
     } catch (error) {
         console.error('Order creation error:', error);
         if (error.name === 'ValidationError') {
             return res.status(400).json({
                 message: 'Validation error',
-                errors: Object.values(error.errors).map(err => err.message)
+                details: Object.values(error.errors).map(err => err.message)
             });
         }
         res.status(500).json({

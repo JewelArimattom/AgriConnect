@@ -67,28 +67,46 @@ const CheckoutPage = () => {
         throw new Error("Please fill in all required fields");
       }
 
+      // Validate phone number format
+      const phoneRegex = /^[0-9]{10}$/;
+      if (!phoneRegex.test(formData.phone.replace(/[^0-9]/g, ''))) {
+        throw new Error("Please enter a valid 10-digit phone number");
+      }
+
+      // Clean and validate email
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email.trim())) {
+        throw new Error("Please enter a valid email address");
+      }
+
+      // Format order data
       const orderData = {
         customerDetails: {
-          name: formData.name,
-          phone: formData.phone,
-          email: formData.email,
-          preferredPickupTime: formData.preferredPickupTime || undefined,
+          name: formData.name.trim(),
+          phone: formData.phone.replace(/[^0-9]/g, ''),
+          email: formData.email.trim(),
+          preferredPickupTime: formData.preferredPickupTime || '',
           paymentMethod: formData.paymentMethod,
-          specialInstructions: formData.specialInstructions || undefined,
+          specialInstructions: formData.specialInstructions?.trim() || '',
         },
         products: cartItems.map((item: any) => ({
           productId: item._id || item.id,
           name: item.name,
           price: item.price,
-          quantity: 1 // Add default quantity
+          quantity: 1
         })),
-        totalAmount: total,
+        totalAmount: Number(total),
         farmer: farmerName,
+        status: 'Confirmed'
       };
+
+      console.log('Sending order data:', orderData); // Debug log
 
       const response = await fetch("http://localhost:5000/api/orders", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json"
+        },
         body: JSON.stringify(orderData),
       });
 

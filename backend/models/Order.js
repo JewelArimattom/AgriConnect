@@ -15,7 +15,8 @@ const orderSchema = new mongoose.Schema({
       required: true
     },
     preferredPickupTime: {
-      type: String
+      type: String,
+      required: false
     },
     paymentMethod: {
       type: String,
@@ -23,26 +24,26 @@ const orderSchema = new mongoose.Schema({
       default: 'pickup'
     },
     specialInstructions: {
-      type: String
+      type: String,
+      required: false
     }
   },
   products: [{
     productId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Product',
+      type: String,
       required: true
     },
     name: { 
       type: String, 
       required: true 
     },
-    quantity: { 
-      type: Number, 
-      required: true 
-    },
     price: { 
       type: String, 
       required: true 
+    },
+    quantity: { 
+      type: Number, 
+      default: 1
     }
   }],
   totalAmount: { 
