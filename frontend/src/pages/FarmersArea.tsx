@@ -155,8 +155,8 @@ const FarmersTechTools = () => {
     }
 
     const models = [
-      "gemini-2.0-flash-lite", // Primary model (lite)
-      "gemini-1.5-flash", // Fallback model
+      "gemini-2.5-flash-lite", // Primary model (lite)
+      "gemini-2.5-flash", // Fallback model
     ];
 
     for (const model of models) {
@@ -1036,6 +1036,258 @@ Ensure all fields are filled with detailed, practical information specific to ${
             "Avoid late picking to maintain fiber quality",
           ],
         },
+        Maize: {
+          crop: "Maize",
+          soilType: [
+            "Well-drained loamy soil",
+            "pH 6.0-7.0",
+            "Rich in organic matter",
+            "Good water holding capacity",
+          ],
+          plantingSeason: "June-July (Kharif), February-March (Rabi)",
+          spacing: "60cm x 25cm between rows and plants",
+          watering:
+            "Regular irrigation during critical growth stages, Avoid waterlogging, 500-600mm total water requirement",
+          fertilization:
+            "NPK 120:60:40 kg/ha, Apply nitrogen in splits, Zinc and boron as micronutrients",
+          harvesting:
+            "90-120 days after sowing, When kernels are hard and milky layer disappears, Harvest at 20-25% moisture",
+          companionPlants: ["Beans", "Squash", "Pumpkin", "Cowpea"],
+          tips: [
+            "Ensure proper seed treatment before sowing",
+            "Practice crop rotation to prevent diseases",
+            "Monitor for stem borers and fall armyworm",
+            "Intercrop with legumes for nitrogen fixation",
+            "Harvest at right moisture content to avoid losses",
+          ],
+        },
+        Potato: {
+          crop: "Potato",
+          soilType: [
+            "Sandy loam soil",
+            "pH 5.5-6.5",
+            "Well-drained",
+            "Free from stones and clods",
+          ],
+          plantingSeason:
+            "October-November (Autumn), January-February (Spring)",
+          spacing: "60cm between rows, 20cm between plants",
+          watering:
+            "Keep soil moist but not waterlogged, Critical during tuber initiation, Reduce watering before harvest",
+          fertilization:
+            "NPK 200:100:150 kg/ha, High potassium requirement, Apply farmyard manure",
+          harvesting:
+            "75-90 days after planting, When haulms turn yellow, Cure tubers for 2-3 weeks before storage",
+          companionPlants: ["Beans", "Corn", "Horseradish", "Cabbage"],
+          tips: [
+            "Use certified disease-free seed potatoes",
+            "Practice proper crop rotation",
+            "Hill up soil around plants for better tuber development",
+            "Control late blight with timely fungicide application",
+            "Store in cool, dark place at 4-7°C",
+          ],
+        },
+        Onion: {
+          crop: "Onion",
+          soilType: [
+            "Fertile loamy soil",
+            "pH 6.0-7.0",
+            "Good drainage",
+            "Rich in organic matter",
+          ],
+          plantingSeason: "October-November (Rabi), March-April (Summer)",
+          spacing: "15cm x 10cm for seeds, 30cm x 15cm for seedlings",
+          watering:
+            "Regular light irrigation, Avoid overwatering, Critical during bulb formation",
+          fertilization:
+            "NPK 100:50:50 kg/ha, Apply phosphorus at planting, Nitrogen in splits",
+          harvesting:
+            "90-120 days after sowing, When tops fall over naturally, Dry in field for 7-10 days",
+          companionPlants: ["Carrot", "Lettuce", "Tomato", "Strawberry"],
+          tips: [
+            "Use healthy seed or seedlings",
+            "Maintain proper plant spacing for good bulb development",
+            "Control thrips and onion fly with insecticides",
+            "Avoid excessive nitrogen to prevent bolting",
+            "Cure bulbs properly before storage",
+          ],
+        },
+        Garlic: {
+          crop: "Garlic",
+          soilType: [
+            "Well-drained loamy soil",
+            "pH 6.0-7.0",
+            "Rich in organic matter",
+            "Avoid waterlogged soils",
+          ],
+          plantingSeason: "October-November (Rabi)",
+          spacing: "20cm between rows, 10cm between cloves",
+          watering:
+            "Moderate irrigation, Keep soil moist during bulb formation, Stop watering 2-3 weeks before harvest",
+          fertilization:
+            "NPK 100:50:50 kg/ha, Apply well-decomposed FYM, Split nitrogen application",
+          harvesting:
+            "120-150 days after planting, When leaves turn yellow, Dry bulbs in shade",
+          companionPlants: ["Tomato", "Carrot", "Cabbage", "Rose"],
+          tips: [
+            "Use healthy, disease-free cloves",
+            "Plant cloves with pointed end up",
+            "Control nematodes with soil fumigation",
+            "Avoid planting after onion family crops",
+            "Store in cool, dry place",
+          ],
+        },
+        Soybean: {
+          crop: "Soybean",
+          soilType: [
+            "Well-drained clay loam soil",
+            "pH 6.0-7.5",
+            "Rich in organic matter",
+            "Good water holding capacity",
+          ],
+          plantingSeason: "June-July (Kharif)",
+          spacing: "45cm x 5-10cm between rows and plants",
+          watering:
+            "Rainfed crop, Supplementary irrigation if needed, Critical during flowering and pod filling",
+          fertilization:
+            "NPK 20:40:20 kg/ha, Inoculate with Rhizobium, Apply phosphorus at sowing",
+          harvesting:
+            "90-110 days after sowing, When pods turn yellow and dry, Harvest at 15-18% moisture",
+          companionPlants: ["Maize", "Cotton", "Sugarcane", "Sorghum"],
+          tips: [
+            "Inoculate seeds with Rhizobium culture",
+            "Practice crop rotation with cereals",
+            "Control pod borers and aphids",
+            "Harvest at right maturity to avoid shattering",
+            "Dry properly before storage",
+          ],
+        },
+        Sugarcane: {
+          crop: "Sugarcane",
+          soilType: [
+            "Deep alluvial soil",
+            "pH 6.5-7.5",
+            "Good drainage",
+            "Rich in organic matter",
+          ],
+          plantingSeason: "February-March (Spring), September-October (Autumn)",
+          spacing: "90cm between rows, 30cm between setts",
+          watering:
+            "Frequent irrigation, 2000-2500mm annual rainfall, Critical during tillering and grand growth",
+          fertilization:
+            "NPK 250:100:250 kg/ha, Heavy nitrogen requirement, Apply in splits",
+          harvesting:
+            "12-18 months after planting, When juice content is high, Harvest during cool months",
+          companionPlants: ["Groundnut", "Soybean", "Pigeon pea", "Turmeric"],
+          tips: [
+            "Use healthy, disease-free setts",
+            "Provide adequate irrigation throughout growth",
+            "Control weeds during early growth",
+            "Monitor for red rot and smut diseases",
+            "Harvest at optimum maturity for better sugar recovery",
+          ],
+        },
+        Banana: {
+          crop: "Banana",
+          soilType: [
+            "Deep, fertile alluvial soil",
+            "pH 6.5-7.5",
+            "Good drainage",
+            "Rich in organic matter",
+          ],
+          plantingSeason: "June-July (Monsoon), January-February (Spring)",
+          spacing: "2.5m x 2.5m for tall varieties, 2m x 2m for dwarf",
+          watering:
+            "Regular irrigation, 1500-2000mm annual rainfall, Avoid water stress during fruit development",
+          fertilization:
+            "NPK 200:100:300 kg/ha, Apply organic manure, Foliar application of micronutrients",
+          harvesting:
+            "12-15 months after planting, When fruits are mature, Harvest in bunches",
+          companionPlants: ["Pineapple", "Ginger", "Turmeric", "Cardamom"],
+          tips: [
+            "Use tissue culture plants for disease-free crop",
+            "Provide wind protection during high winds",
+            "Control banana weevil and nematodes",
+            "Remove male bud after fruit set",
+            "Handle fruits carefully to avoid bruising",
+          ],
+        },
+        Mango: {
+          crop: "Mango",
+          soilType: [
+            "Deep, well-drained loamy soil",
+            "pH 6.0-7.5",
+            "Good water holding capacity",
+            "Free from hard pan",
+          ],
+          plantingSeason: "June-July (Monsoon), December-January (Winter)",
+          spacing: "10m x 10m for regular, 5m x 5m for dwarf varieties",
+          watering:
+            "Regular irrigation during dry periods, Avoid waterlogging, Critical during flowering and fruit development",
+          fertilization:
+            "NPK 500:250:500 g/tree/year, Apply FYM annually, Zinc and boron as micronutrients",
+          harvesting:
+            "4-6 years after planting, When fruits are mature, Harvest manually with care",
+          companionPlants: ["Lemon grass", "Turmeric", "Ginger", "Marigold"],
+          tips: [
+            "Choose grafted plants from reliable nurseries",
+            "Prune regularly for proper shape and fruiting",
+            "Control mango hopper and fruit fly",
+            "Protect from frost during winter",
+            "Harvest at proper maturity for better quality",
+          ],
+        },
+        Coffee: {
+          crop: "Coffee",
+          soilType: [
+            "Well-drained red loamy soil",
+            "pH 5.5-6.5",
+            "Rich in organic matter",
+            "Slightly acidic",
+          ],
+          plantingSeason:
+            "March-April (Pre-monsoon), October-November (Post-monsoon)",
+          spacing: "2.5m x 2.5m for Arabica, 2m x 2m for Robusta",
+          watering:
+            "1500-2000mm annual rainfall, Supplementary irrigation during dry spells, Shade management important",
+          fertilization:
+            "NPK 200:100:200 kg/ha, Apply organic manure, Regular soil testing recommended",
+          harvesting:
+            "3-4 years after planting, When cherries are red ripe, Selective hand picking",
+          companionPlants: ["Pepper", "Cardamom", "Banana", "Ginger"],
+          tips: [
+            "Provide 50% shade during early years",
+            "Prune regularly for bushy growth",
+            "Control coffee berry borer and leaf rust",
+            "Process beans immediately after harvest",
+            "Maintain proper drying and storage conditions",
+          ],
+        },
+        Tea: {
+          crop: "Tea",
+          soilType: [
+            "Well-drained acidic soil",
+            "pH 4.5-5.5",
+            "Rich in organic matter",
+            "Good water holding capacity",
+          ],
+          plantingSeason: "March-April (Pre-monsoon), July-August (Monsoon)",
+          spacing: "75cm x 60cm for orthodox, 60cm x 45cm for CTC",
+          watering:
+            "2000-3000mm annual rainfall, Fog and mist beneficial, Supplementary irrigation in dry areas",
+          fertilization:
+            "NPK 120:60:120 kg/ha, Apply FYM regularly, Maintain soil pH with lime",
+          harvesting:
+            "2-3 years after planting, Pluck two leaves and a bud, Regular plucking maintains quality",
+          companionPlants: ["Cardamom", "Ginger", "Turmeric", "Lemon grass"],
+          tips: [
+            "Use clonal planting material",
+            "Maintain proper shade (50-60%)",
+            "Control blister blight and red spider mite",
+            "Regular plucking improves yield and quality",
+            "Process leaves within hours of harvest",
+          ],
+        },
       };
 
       setTimeout(() => {
@@ -1139,7 +1391,7 @@ Ensure all fields are filled with detailed, practical information specific to ${
               </div>
               <div>
                 <h1 className="text-3xl font-bold text-gray-900">
-                  AgriTech AI Hub
+                  AgriTech AI Hub - Farmer Tools
                 </h1>
                 <p className="text-sm text-gray-600 mt-1">
                   Smart Farming Solutions Powered by AI
@@ -1614,6 +1866,16 @@ Ensure all fields are filled with detailed, practical information specific to ${
                       <option value="Pulses (Lentils)">
                         🫘 Pulses (Lentils)
                       </option>
+                      <option value="Maize">🌽 Maize</option>
+                      <option value="Potato">� Potato</option>
+                      <option value="Onion">🧅 Onion</option>
+                      <option value="Garlic">🧄 Garlic</option>
+                      <option value="Soybean">�🫘 Soybean</option>
+                      <option value="Sugarcane">🎋 Sugarcane</option>
+                      <option value="Banana">🍌 Banana</option>
+                      <option value="Mango">🥭 Mango</option>
+                      <option value="Coffee">☕ Coffee</option>
+                      <option value="Tea">🍵 Tea</option>
                     </select>
                   </div>
 
