@@ -1,18 +1,19 @@
-import AnimalProducts from "./AnimalProducts"
-import HeroSection from "./HeroSection"
-import LatestCollection from "./LatestCollection"
-import RentToolsSection from "./RentToolsSection"
+import AnimalProducts from "./AnimalProducts";
+import HeroSection from "./HeroSection";
+import LatestCollection from "./LatestCollection";
+import LiveAuction from "./LiveAuction";
+import RentToolsSection from "./RentToolsSection";
 
 const Home = () => {
   return (
     <div>
-    <HeroSection />
-    <LatestCollection />
-    <AnimalProducts />
-    <RentToolsSection />
+      <HeroSection />
+      <LatestCollection />
+      <LiveAuction />
+      <AnimalProducts />
+      <RentToolsSection />
     </div>
-  )
+  );
+};
 
-}
-
-export default Home
+export default Home;

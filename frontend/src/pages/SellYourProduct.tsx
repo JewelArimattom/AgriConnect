@@ -1,14 +1,22 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthenticationContext';
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthenticationContext";
+import {
+  HiCheckCircle,
+  HiShoppingBag,
+  HiClock,
+  HiTag,
+  HiPhotograph,
+} from "react-icons/hi";
+import { FaLeaf, FaSeedling, FaTractor } from "react-icons/fa";
 
-const API_URL = 'http://localhost:5000/api/products';
+const API_URL = "http://localhost:5000/api/products";
 
 const subCategoryMap: { [key: string]: string[] } = {
-  'Produce': ['Fruits', 'Vegetables', 'Herbs'],
-  'Animal Products': ['Dairy & Eggs', 'Meat & Poultry', 'Seafood'],
-  'Pantry': ['Grains', 'Spices', 'Oils & Sauces'],
-  'Artisanal Goods': ['Cheese', 'Honey', 'Jams'],
+  Produce: ["Fruits", "Vegetables", "Herbs"],
+  "Animal Products": ["Dairy & Eggs", "Meat & Poultry", "Seafood"],
+  Pantry: ["Grains", "Spices", "Oils & Sauces"],
+  "Artisanal Goods": ["Cheese", "Honey", "Jams"],
 };
 
 const SellYourProduct = () => {
@@ -16,28 +24,32 @@ const SellYourProduct = () => {
   const { user } = useAuth();
 
   const [formData, setFormData] = useState({
-    name: '',
-    description: '',
-    imageUrl: '',
-    category: 'Produce', 
-    subCategory: '',
-    buyType: 'direct_buy',
-    price: '',
-    startingBid: '',
-    auctionStartTime: '',
-    auctionEndTime: '',
+    name: "",
+    description: "",
+    imageUrl: "",
+    category: "Produce",
+    subCategory: "",
+    buyType: "direct_buy",
+    price: "",
+    startingBid: "",
+    auctionStartTime: "",
+    auctionEndTime: "",
   });
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
     const { name, value } = e.target;
-    
-    if (name === 'category') {
+
+    if (name === "category") {
       setFormData({
         ...formData,
         category: value,
-        subCategory: '', 
+        subCategory: "",
       });
     } else {
       setFormData({
@@ -49,11 +61,11 @@ const SellYourProduct = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError('');
+    setError("");
     setIsLoading(true);
 
     if (!user) {
-      setError('You must be logged in to sell a product.');
+      setError("You must be logged in to sell a product.");
       setIsLoading(false);
       return;
     }
@@ -65,18 +77,18 @@ const SellYourProduct = () => {
 
     try {
       const response = await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to submit product.');
+        throw new Error(errorData.message || "Failed to submit product.");
       }
 
-      alert('Product submitted successfully!');
-      navigate('/dashboard');
+      alert("Product submitted successfully!");
+      navigate("/dashboard");
     } catch (err: any) {
       setError(err.message);
     } finally {
@@ -87,67 +99,347 @@ const SellYourProduct = () => {
   const currentSubCategories = subCategoryMap[formData.category] || [];
 
   return (
-    <div className="bg-gray-50 min-h-screen py-12 px-4">
-      <div className="max-w-2xl mx-auto bg-white p-8 rounded-lg shadow-md">
-        <h2 className="text-3xl font-extrabold text-center mb-6">List a New Product</h2>
-        {error && <p className="text-center text-sm text-red-600 mb-4">{error}</p>}
-        <form onSubmit={handleSubmit} className="space-y-6">
-          <input name="name" value={formData.name} onChange={handleChange} placeholder="Product Name (e.g., Organic Apples)" required className="w-full p-3 border rounded-md"/>
-          <textarea name="description" value={formData.description} onChange={handleChange} placeholder="Detailed Description" required rows={4} className="w-full p-3 border rounded-md"></textarea>
-          <input name="imageUrl" value={formData.imageUrl} onChange={handleChange} placeholder="Image URL" required className="w-full p-3 border rounded-md"/>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-green-50 py-12">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Header */}
+        <div className="mb-12 text-center">
+          <div className="inline-flex items-center space-x-3 bg-white rounded-full px-6 py-3 shadow-lg mb-4">
+            <FaTractor className="w-5 h-5 text-green-600" />
+            <span className="font-semibold text-gray-700">
+              Sell Your Products
+            </span>
+          </div>
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-3">
+            List a New Product
+          </h1>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            Start selling your farm-fresh products directly to customers
+          </p>
+        </div>
 
-          <select name="category" value={formData.category} onChange={handleChange} required className="w-full p-3 border bg-white rounded-md">
-            <option value="Produce">Produce</option>
-            <option value="Animal Products">Animal Products</option>
-            <option value="Bakery">Bakery</option>
-            <option value="Pantry">Pantry</option>
-            <option value="Artisanal Goods">Artisanal Goods</option>
-            <option value="Plants & Flowers">Plants & Flowers</option>
-          </select>
-
-          {currentSubCategories.length > 0 && (
-            <select name="subCategory" value={formData.subCategory} onChange={handleChange} required className="w-full p-3 border bg-white rounded-md">
-              <option value="" disabled>-- Select a Sub-Category --</option>
-              {currentSubCategories.map(sub => (
-                <option key={sub} value={sub}>{sub}</option>
-              ))}
-            </select>
-          )}
-
-          <select name="buyType" value={formData.buyType} onChange={handleChange} required className="w-full p-3 border bg-white rounded-md">
-            <option value="direct_buy">Direct Buy</option>
-            <option value="enquiry">Send Enquiry</option>
-            <option value="auction">Live Auction</option>
-          </select>
-          
-          {formData.buyType === 'direct_buy' && (
-            <input name="price" value={formData.price} onChange={handleChange} placeholder="Price (e.g., ₹250/kg)" required className="w-full p-3 border rounded-md"/>
-          )}
-
-          {formData.buyType === 'auction' && (
-            <div className="space-y-4 p-4 border rounded-md bg-gray-50">
-              <input name="startingBid" value={formData.startingBid} onChange={handleChange} placeholder="Starting Bid (e.g., 100)" type="number" required className="w-full p-3 border rounded-md"/>
-              <div>
-                 <label className="block text-sm font-medium text-gray-700 mb-1">Auction Start Time</label>
-                 <input name="auctionStartTime" value={formData.auctionStartTime} onChange={handleChange} type="datetime-local" required className="w-full p-3 border rounded-md"/>
-              </div>
-              <div>
-                 <label className="block text-sm font-medium text-gray-700 mb-1">Auction End Time</label>
-                 <input name="auctionEndTime" value={formData.auctionEndTime} onChange={handleChange} type="datetime-local" required className="w-full p-3 border rounded-md"/>
-              </div>
+        {/* Main Form Card */}
+        <div className="bg-white rounded-2xl shadow-xl border-2 border-gray-100 overflow-hidden">
+          {error && (
+            <div className="bg-red-50 border-b-2 border-red-200 px-6 py-4">
+              <p className="text-red-600 font-semibold text-center">{error}</p>
             </div>
           )}
 
-          {formData.buyType === 'enquiry' && (
-             <div className="p-4 border rounded-md bg-blue-50 text-blue-800 text-sm">
-                Customers will be able to send you an enquiry about this product.
-             </div>
-          )}
+          <form onSubmit={handleSubmit} className="p-8 space-y-8">
+            {/* Basic Information */}
+            <div className="space-y-6">
+              <div className="flex items-center space-x-3 mb-6">
+                <FaLeaf className="w-6 h-6 text-green-600" />
+                <h2 className="text-2xl font-bold text-gray-900">
+                  Basic Information
+                </h2>
+              </div>
 
-          <button type="submit" disabled={isLoading} className="w-full py-3 px-4 bg-green-600 text-white font-bold rounded-md hover:bg-green-700 disabled:bg-gray-400">
-            {isLoading ? 'Submitting...' : 'Submit Product'}
-          </button>
-        </form>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Product Name *
+                </label>
+                <input
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  placeholder="e.g., Organic Apples, Fresh Tomatoes"
+                  required
+                  className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Description *
+                </label>
+                <textarea
+                  name="description"
+                  value={formData.description}
+                  onChange={handleChange}
+                  placeholder="Describe your product: quality, quantity, freshness, etc."
+                  required
+                  rows={4}
+                  className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all resize-none"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center space-x-2">
+                  <HiPhotograph className="w-4 h-4 text-green-600" />
+                  <span>Image URL *</span>
+                </label>
+                <input
+                  name="imageUrl"
+                  value={formData.imageUrl}
+                  onChange={handleChange}
+                  placeholder="https://example.com/product-image.jpg"
+                  required
+                  className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
+                />
+                {formData.imageUrl && (
+                  <div className="mt-3 rounded-xl overflow-hidden border-2 border-gray-200">
+                    <img
+                      src={formData.imageUrl}
+                      alt="Preview"
+                      className="w-full h-48 object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = "none";
+                      }}
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Category Selection */}
+            <div className="space-y-6 pt-8 border-t-2 border-gray-100">
+              <div className="flex items-center space-x-3 mb-6">
+                <HiTag className="w-6 h-6 text-green-600" />
+                <h2 className="text-2xl font-bold text-gray-900">Category</h2>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Main Category *
+                  </label>
+                  <select
+                    name="category"
+                    value={formData.category}
+                    onChange={handleChange}
+                    required
+                    className="w-full p-4 border-2 border-gray-200 bg-white rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all font-semibold"
+                  >
+                    <option value="Produce">🍎 Produce</option>
+                    <option value="Animal Products">🥛 Animal Products</option>
+                    <option value="Bakery">🍞 Bakery</option>
+                    <option value="Pantry">🌾 Pantry</option>
+                    <option value="Artisanal Goods">🧀 Artisanal Goods</option>
+                    <option value="Plants & Flowers">
+                      🌺 Plants & Flowers
+                    </option>
+                  </select>
+                </div>
+
+                {currentSubCategories.length > 0 && (
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Sub-Category *
+                    </label>
+                    <select
+                      name="subCategory"
+                      value={formData.subCategory}
+                      onChange={handleChange}
+                      required
+                      className="w-full p-4 border-2 border-gray-200 bg-white rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all font-semibold"
+                    >
+                      <option value="" disabled>
+                        -- Select Sub-Category --
+                      </option>
+                      {currentSubCategories.map((sub) => (
+                        <option key={sub} value={sub}>
+                          {sub}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Pricing & Buy Type */}
+            <div className="space-y-6 pt-8 border-t-2 border-gray-100">
+              <div className="flex items-center space-x-3 mb-6">
+                <HiShoppingBag className="w-6 h-6 text-green-600" />
+                <h2 className="text-2xl font-bold text-gray-900">
+                  Pricing & Sales Type
+                </h2>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  How do you want to sell? *
+                </label>
+                <select
+                  name="buyType"
+                  value={formData.buyType}
+                  onChange={handleChange}
+                  required
+                  className="w-full p-4 border-2 border-gray-200 bg-white rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all font-semibold"
+                >
+                  <option value="direct_buy">
+                    💰 Direct Buy - Set a fixed price
+                  </option>
+                  <option value="enquiry">
+                    📧 Send Enquiry - Customers contact you
+                  </option>
+                  <option value="auction">
+                    🔨 Live Auction - Start a bidding war
+                  </option>
+                </select>
+              </div>
+
+              {formData.buyType === "direct_buy" && (
+                <div className="bg-green-50 border-2 border-green-200 rounded-xl p-6">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                    Product Price *
+                  </label>
+                  <input
+                    name="price"
+                    value={formData.price}
+                    onChange={handleChange}
+                    placeholder="e.g., ₹250/kg or ₹50/unit"
+                    required
+                    className="w-full p-4 border-2 border-green-300 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all bg-white"
+                  />
+                  <p className="text-xs text-gray-600 mt-2">
+                    Customers can directly book at this price
+                  </p>
+                </div>
+              )}
+
+              {formData.buyType === "auction" && (
+                <div className="bg-orange-50 border-2 border-orange-200 rounded-xl p-6 space-y-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      Starting Bid (₹) *
+                    </label>
+                    <input
+                      name="startingBid"
+                      value={formData.startingBid}
+                      onChange={handleChange}
+                      placeholder="100"
+                      type="number"
+                      required
+                      className="w-full p-4 border-2 border-orange-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all bg-white"
+                    />
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center space-x-2">
+                        <HiClock className="w-4 h-4 text-orange-600" />
+                        <span>Auction Start Time *</span>
+                      </label>
+                      <input
+                        name="auctionStartTime"
+                        value={formData.auctionStartTime}
+                        onChange={handleChange}
+                        type="datetime-local"
+                        required
+                        className="w-full p-4 border-2 border-orange-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all bg-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center space-x-2">
+                        <HiClock className="w-4 h-4 text-orange-600" />
+                        <span>Auction End Time *</span>
+                      </label>
+                      <input
+                        name="auctionEndTime"
+                        value={formData.auctionEndTime}
+                        onChange={handleChange}
+                        type="datetime-local"
+                        required
+                        className="w-full p-4 border-2 border-orange-300 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all bg-white"
+                      />
+                    </div>
+                  </div>
+                  <div className="bg-orange-100 rounded-lg p-4">
+                    <p className="text-sm text-orange-800 font-semibold">
+                      ⏰ Auction Info
+                    </p>
+                    <p className="text-xs text-orange-700 mt-1">
+                      Your product will be available for bidding during the
+                      selected time period
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {formData.buyType === "enquiry" && (
+                <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-6">
+                  <div className="flex items-start space-x-3">
+                    <div className="bg-blue-100 p-3 rounded-full">
+                      <FaSeedling className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold text-blue-900 mb-1">
+                        Enquiry Mode
+                      </h3>
+                      <p className="text-sm text-blue-800">
+                        Customers will be able to contact you directly to
+                        discuss pricing, quantity, and pickup details. Perfect
+                        for bulk orders or custom requirements.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Submit Button */}
+            <div className="pt-8 border-t-2 border-gray-100">
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full py-5 px-6 bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold rounded-xl hover:from-green-700 hover:to-emerald-700 transition-all duration-200 transform hover:scale-105 shadow-lg disabled:from-gray-400 disabled:to-gray-400 disabled:transform-none disabled:cursor-not-allowed flex items-center justify-center space-x-3 text-lg"
+              >
+                {isLoading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-6 w-6 border-t-2 border-white"></div>
+                    <span>Submitting...</span>
+                  </>
+                ) : (
+                  <>
+                    <HiCheckCircle className="w-6 h-6" />
+                    <span>List Product</span>
+                  </>
+                )}
+              </button>
+
+              {/* Info Banner */}
+              <div className="mt-6 bg-gray-50 border-2 border-gray-200 rounded-xl p-4">
+                <p className="text-sm text-gray-700 text-center">
+                  <strong>Note:</strong> After listing, your product will appear
+                  in the marketplace. Customers will contact you directly for
+                  pickup arrangements.
+                </p>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        {/* Trust Badges */}
+        <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-white rounded-xl shadow-md p-6 text-center border-2 border-gray-100">
+            <div className="bg-green-100 w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3">
+              <FaTractor className="w-7 h-7 text-green-600" />
+            </div>
+            <h3 className="font-bold text-gray-900 mb-1">Direct Sales</h3>
+            <p className="text-sm text-gray-600">
+              Sell directly to customers without middlemen
+            </p>
+          </div>
+          <div className="bg-white rounded-xl shadow-md p-6 text-center border-2 border-gray-100">
+            <div className="bg-blue-100 w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3">
+              <HiCheckCircle className="w-7 h-7 text-blue-600" />
+            </div>
+            <h3 className="font-bold text-gray-900 mb-1">Fair Pricing</h3>
+            <p className="text-sm text-gray-600">
+              Set your own prices and terms
+            </p>
+          </div>
+          <div className="bg-white rounded-xl shadow-md p-6 text-center border-2 border-gray-100">
+            <div className="bg-purple-100 w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3">
+              <FaSeedling className="w-7 h-7 text-purple-600" />
+            </div>
+            <h3 className="font-bold text-gray-900 mb-1">Easy Management</h3>
+            <p className="text-sm text-gray-600">
+              Track bookings from your dashboard
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );
