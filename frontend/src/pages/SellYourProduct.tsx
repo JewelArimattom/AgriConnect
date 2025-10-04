@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../context/AuthenticationContext";
 import {
   HiCheckCircle,
@@ -12,23 +12,18 @@ import { FaLeaf, FaSeedling, FaTractor } from "react-icons/fa";
 
 const API_URL = "http://localhost:5000/api/products";
 
-const subCategoryMap: { [key: string]: string[] } = {
-  Produce: ["Fruits", "Vegetables", "Herbs"],
-  "Animal Products": ["Dairy & Eggs", "Meat & Poultry", "Seafood"],
-  Pantry: ["Grains", "Spices", "Oils & Sauces"],
-  "Artisanal Goods": ["Cheese", "Honey", "Jams"],
-};
-
 const SellYourProduct = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { productId } = useParams();
+  const [isEditing, setIsEditing] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
     description: "",
     imageUrl: "",
-    category: "Produce",
-    subCategory: "",
+    location: "",
+    category: "Vegetables",
     buyType: "direct_buy",
     price: "",
     startingBid: "",
@@ -38,6 +33,38 @@ const SellYourProduct = () => {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  useEffect(() => {
+    const fetchProduct = async () => {
+      if (productId) {
+        setIsLoading(true);
+        setIsEditing(true);
+        try {
+          const response = await fetch(`http://localhost:5000/api/products/${productId}`);
+          if (!response.ok) throw new Error("Failed to fetch product");
+          const product = await response.json();
+          setFormData({
+            name: product.name || "",
+            description: product.description || "",
+            imageUrl: product.imageUrl || "",
+            location: product.location || "",
+            category: product.category || "Produce",
+            buyType: product.buyType || "direct_buy",
+            price: product.price || "",
+            startingBid: product.startingBid || "",
+            auctionStartTime: product.auctionStartTime || "",
+            auctionEndTime: product.auctionEndTime || "",
+          });
+        } catch (err: any) {
+          setError(err.message);
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    fetchProduct();
+  }, [productId]);
+
   const handleChange = (
     e: React.ChangeEvent<
       HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
@@ -45,18 +72,10 @@ const SellYourProduct = () => {
   ) => {
     const { name, value } = e.target;
 
-    if (name === "category") {
-      setFormData({
-        ...formData,
-        category: value,
-        subCategory: "",
-      });
-    } else {
-      setFormData({
-        ...formData,
-        [name]: value,
-      });
-    }
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -76,27 +95,46 @@ const SellYourProduct = () => {
     };
 
     try {
-      const response = await fetch(API_URL, {
-        method: "POST",
+      const url = productId ? `${API_URL}/${productId}` : API_URL;
+      const method = productId ? "PUT" : "POST";
+
+      // Validate required fields for auction type
+      if (payload.buyType === "auction") {
+        if (!payload.startingBid || !payload.auctionStartTime || !payload.auctionEndTime) {
+          throw new Error("For auction items, please provide starting bid and auction times.");
+        }
+      }
+
+      // Validate required fields for direct buy
+      if (payload.buyType === "direct_buy" && !payload.price) {
+        throw new Error("Please provide a price for direct buy items.");
+      }
+
+      const response = await fetch(url, {
+        method: method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to submit product.");
+        let errorMessage = data.message;
+        if (data.errors && data.errors.length > 0) {
+          errorMessage += '\n• ' + data.errors.join('\n• ');
+        }
+        throw new Error(errorMessage || `Failed to ${productId ? 'update' : 'submit'} product.`);
       }
 
-      alert("Product submitted successfully!");
+      alert(`Product ${productId ? 'updated' : 'submitted'} successfully!`);
       navigate("/dashboard");
     } catch (err: any) {
-      setError(err.message);
+      console.error('Error submitting product:', err);
+      setError(err.message || 'An error occurred while saving the product. Please check all required fields.');
     } finally {
       setIsLoading(false);
     }
   };
-
-  const currentSubCategories = subCategoryMap[formData.category] || [];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-green-50 py-12">
@@ -110,10 +148,10 @@ const SellYourProduct = () => {
             </span>
           </div>
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-3">
-            List a New Product
+            {isEditing ? 'Edit Product' : 'List a New Product'}
           </h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Start selling your farm-fresh products directly to customers
+            {isEditing ? 'Update your product information' : 'Start selling your farm-fresh products directly to customers'}
           </p>
         </div>
 
@@ -144,6 +182,20 @@ const SellYourProduct = () => {
                   value={formData.name}
                   onChange={handleChange}
                   placeholder="e.g., Organic Apples, Fresh Tomatoes"
+                  required
+                  className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Farm Location *
+                </label>
+                <input
+                  name="location"
+                  value={formData.location}
+                  onChange={handleChange}
+                  placeholder="e.g., Thrissur, Kerala"
                   required
                   className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
                 />
@@ -199,52 +251,32 @@ const SellYourProduct = () => {
                 <h2 className="text-2xl font-bold text-gray-900">Category</h2>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Main Category *
-                  </label>
-                  <select
-                    name="category"
-                    value={formData.category}
-                    onChange={handleChange}
-                    required
-                    className="w-full p-4 border-2 border-gray-200 bg-white rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all font-semibold"
-                  >
-                    <option value="Produce">🍎 Produce</option>
-                    <option value="Animal Products">🥛 Animal Products</option>
-                    <option value="Bakery">🍞 Bakery</option>
-                    <option value="Pantry">🌾 Pantry</option>
-                    <option value="Artisanal Goods">🧀 Artisanal Goods</option>
-                    <option value="Plants & Flowers">
-                      🌺 Plants & Flowers
-                    </option>
-                  </select>
-                </div>
-
-                {currentSubCategories.length > 0 && (
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Sub-Category *
-                    </label>
-                    <select
-                      name="subCategory"
-                      value={formData.subCategory}
-                      onChange={handleChange}
-                      required
-                      className="w-full p-4 border-2 border-gray-200 bg-white rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all font-semibold"
-                    >
-                      <option value="" disabled>
-                        -- Select Sub-Category --
-                      </option>
-                      {currentSubCategories.map((sub) => (
-                        <option key={sub} value={sub}>
-                          {sub}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Category *
+                </label>
+                <select
+                  name="category"
+                  value={formData.category}
+                  onChange={handleChange}
+                  required
+                  className="w-full p-4 border-2 border-gray-200 bg-white rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all font-semibold"
+                >
+                  <option value="Vegetables">Vegetables</option>
+                  <option value="Fruits">Fruits</option>
+                  <option value="Grains & Pulses">Grains & Pulses</option>
+                  <option value="Spices & Herbs">Spices & Herbs</option>
+                  <option value="Dairy & Milk Products">Dairy & Milk Products</option>
+                  <option value="Animal">Animal</option>
+                  <option value="Fertilizers">Fertilizers</option>
+                  <option value="Seeds">Seeds</option>
+                  <option value="Plants">Plants</option>
+                  <option value="Bio-Fertilizers">Bio-Fertilizers</option>
+                  <option value="Homemade Foods">Homemade Foods</option>
+                  <option value="Farm Tools & Equipment">Farm Tools & Equipment</option>
+                  <option value="Dry Fruits & Nuts">Dry Fruits & Nuts</option>
+                  <option value="Honey & Bee Products">Honey & Bee Products</option>
+                </select>
               </div>
             </div>
 
@@ -393,7 +425,7 @@ const SellYourProduct = () => {
                 ) : (
                   <>
                     <HiCheckCircle className="w-6 h-6" />
-                    <span>List Product</span>
+                    <span>{isEditing ? 'Update Product' : 'List Product'}</span>
                   </>
                 )}
               </button>

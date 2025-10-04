@@ -96,14 +96,24 @@ const FarmerDashboard = () => {
           body: JSON.stringify({ status: newStatus }),
         }
       );
-      if (!response.ok) throw new Error("Failed to update booking status.");
 
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to update booking status.");
+      }
+
+      // Update the local state with the returned order data
       setMyOrders((prevOrders) =>
         prevOrders.map((order) =>
           order._id === orderId ? { ...order, status: newStatus } : order
         )
       );
+
+      // Show success message
+      alert("Order status updated successfully!");
     } catch (err: any) {
+      console.error("Status update error:", err);
       setError(err.message);
       alert("Failed to update status: " + err.message);
     }
@@ -188,10 +198,13 @@ const FarmerDashboard = () => {
                     </span>
                   </div>
                   <div className="flex space-x-2">
-                    <button className="flex-1 flex items-center justify-center space-x-2 bg-green-50 text-green-600 font-semibold py-2 px-4 rounded-lg hover:bg-green-100 transition-colors">
+                    <Link
+                      to={`/upload-product/${product._id}`}
+                      className="flex-1 flex items-center justify-center space-x-2 bg-green-50 text-green-600 font-semibold py-2 px-4 rounded-lg hover:bg-green-100 transition-colors"
+                    >
                       <HiPencil className="w-4 h-4" />
                       <span>Edit</span>
-                    </button>
+                    </Link>
                     <button
                       onClick={() => handleDeleteProduct(product._id)}
                       className="flex-1 flex items-center justify-center space-x-2 bg-red-50 text-red-600 font-semibold py-2 px-4 rounded-lg hover:bg-red-100 transition-colors"

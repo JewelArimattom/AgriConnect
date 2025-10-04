@@ -79,12 +79,11 @@ const Navbar = () => {
             </Link>
 
             {user ? (
-              <div
-                className="relative"
-                onMouseEnter={() => setProfileOpen(true)}
-                onMouseLeave={() => setProfileOpen(false)}
-              >
-                <button className="flex items-center space-x-2 px-4 py-2 text-gray-700 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all duration-200 focus:outline-none group">
+              <div className="relative">
+                <button 
+                  onClick={() => setProfileOpen(!isProfileOpen)}
+                  className="flex items-center space-x-2 px-4 py-2 text-gray-700 hover:text-green-600 hover:bg-green-50 rounded-lg transition-all duration-200 focus:outline-none group"
+                >
                   <UserCircleIcon className="h-7 w-7" />
                   <span className="font-medium text-sm hidden xl:block">
                     Account
@@ -97,6 +96,8 @@ const Navbar = () => {
                       ? "opacity-100 translate-y-0"
                       : "opacity-0 -translate-y-2 pointer-events-none"
                   }`}
+                  onMouseEnter={() => setProfileOpen(true)}
+                  onMouseLeave={() => setProfileOpen(false)}
                 >
                   <div className="px-4 py-3 border-b border-gray-100">
                     <p className="text-sm font-semibold text-gray-900">

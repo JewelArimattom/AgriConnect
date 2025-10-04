@@ -5,6 +5,10 @@ const productSchema = new mongoose.Schema({
     type: String, 
     required: true 
   },
+  location: {
+    type: String,
+    required: true
+  },
   description: { 
     type: String, 
     required: true 
@@ -21,16 +25,21 @@ const productSchema = new mongoose.Schema({
     type: String,
     required: true,
     enum: [
-      'Produce',
-      'Animal Products', 
-      'Bakery',
-      'Pantry',
-      'Artisanal Goods',
-      'Plants & Flowers'
+      'Vegetables',
+      'Fruits',
+      'Grains & Pulses',
+      'Spices & Herbs',
+      'Dairy & Milk Products',
+      'Animal',
+      'Fertilizers',
+      'Seeds',
+      'Plants',
+      'Bio-Fertilizers',
+      'Homemade Foods',
+      'Farm Tools & Equipment',
+      'Dry Fruits & Nuts',
+      'Honey & Bee Products',
     ]
-  },
-  subCategory: {
-    type: String,
   },
   buyType: {
     type: String,
@@ -85,10 +94,6 @@ const productSchema = new mongoose.Schema({
   organic: {
     type: Boolean,
     default: false
-  },
-  rating: {
-    type: Number,
-    default: 0
   }
 }, {
   timestamps: true 

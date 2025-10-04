@@ -39,6 +39,7 @@ const App = () => {
           <Route path="/profile" element={<ProfilePage />} />
           
           <Route path="/upload-product" element={<UploadProductPage />} />
+          <Route path="/upload-product/:productId" element={<UploadProductPage />} />
           <Route path="/dashboard" element={<FarmerDashboard />} />
           <Route path="/farmers-area" element={<FarmersTechTools />} />
 

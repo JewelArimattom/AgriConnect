@@ -30,28 +30,62 @@ mongoose.connect(process.env.MONGO_URI)
 app.post('/api/auth/signup', async (req, res) => {
   const { name, email, password } = req.body;
   try {
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: 'Please provide all required fields' });
+    }
+
     const userExists = await User.findOne({ email });
     if (userExists) {
       return res.status(400).json({ message: 'User with this email already exists' });
     }
-    const user = await User.create({ name, email, password });
-    res.status(201).json({ _id: user._id, name: user.name, email: user.email });
+
+    const user = new User({ name, email, password });
+    await user.save();
+    
+    res.status(201).json({
+      _id: user._id,
+      name: user.name,
+      email: user.email
+    });
   } catch (error) {
-    res.status(500).json({ message: 'Server error during sign up' });
+    console.error('Signup error:', error);
+    res.status(500).json({ 
+      message: 'Server error during sign up',
+      error: error.message 
+    });
   }
 });
 
 app.post('/api/auth/login', async (req, res) => {
   const { email, password } = req.body;
   try {
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Please provide both email and password' });
+    }
+
     const user = await User.findOne({ email });
-    if (user && (await user.matchPassword(password))) {
-      res.json({ _id: user._id, name: user.name, email: user.email });
+    
+    if (!user) {
+      return res.status(401).json({ message: 'User not found' });
+    }
+
+    const isMatch = await user.matchPassword(password);
+    
+    if (isMatch) {
+      res.json({
+        _id: user._id,
+        name: user.name,
+        email: user.email
+      });
     } else {
-      res.status(401).json({ message: 'Invalid email or password' });
+      res.status(401).json({ message: 'Invalid password' });
     }
   } catch (error) {
-    res.status(500).json({ message: 'Server error during login' });
+    console.error('Login error:', error);
+    res.status(500).json({ 
+      message: 'Server error during login',
+      error: error.message 
+    });
   }
 });
 
@@ -59,14 +93,77 @@ app.post('/api/auth/login', async (req, res) => {
 app.post('/api/products', async (req, res) => {
   try {
     const productData = req.body;
-    if (productData.buyType === 'auction' && productData.startingBid) {
+    
+    // Validate required fields
+    const requiredFields = ['name', 'description', 'imageUrl', 'location', 'category', 'farmer', 'buyType'];
+    const missingFields = requiredFields.filter(field => !productData[field]);
+    
+    if (missingFields.length > 0) {
+      return res.status(400).json({ 
+        message: `Missing required fields: ${missingFields.join(', ')}`,
+        fields: missingFields
+      });
+    }
+
+    // Validate buyType specific fields
+    if (productData.buyType === 'direct_buy' && !productData.price) {
+      return res.status(400).json({ 
+        message: 'Price is required for direct buy products'
+      });
+    }
+
+    if (productData.buyType === 'auction') {
+      if (!productData.startingBid) {
+        return res.status(400).json({ 
+          message: 'Starting bid is required for auction products'
+        });
+      }
       productData.currentPrice = productData.startingBid;
     }
+
+    // Validate category
+    const validCategories = [
+      'Vegetables', 'Fruits', 'Grains & Pulses', 'Spices & Herbs',
+      'Dairy & Milk Products', 'Animal', 'Fertilizers', 'Seeds',
+      'Plants', 'Bio-Fertilizers', 'Homemade Foods',
+      'Farm Tools & Equipment', 'Dry Fruits & Nuts', 'Honey & Bee Products'
+    ];
+    
+    if (!validCategories.includes(productData.category)) {
+      return res.status(400).json({
+        message: `Invalid category. Must be one of: ${validCategories.join(', ')}`
+      });
+    }
+
+    // Validate buyType
+    const validBuyTypes = ['direct_buy', 'enquiry', 'auction'];
+    if (!validBuyTypes.includes(productData.buyType)) {
+      return res.status(400).json({
+        message: `Invalid buy type. Must be one of: ${validBuyTypes.join(', ')}`
+      });
+    }
+
     const newProduct = new Product(productData);
-    const product = await newProduct.save();
-    res.status(201).json(product);
+    
+    try {
+      const product = await newProduct.save();
+      res.status(201).json(product);
+    } catch (validationError) {
+      if (validationError.name === 'ValidationError') {
+        const errors = Object.values(validationError.errors).map(err => err.message);
+        return res.status(400).json({
+          message: 'Validation failed',
+          errors: errors
+        });
+      }
+      throw validationError;
+    }
   } catch (error) {
-    res.status(500).json({ message: 'Server error creating product' });
+    console.error('Product creation error:', error);
+    res.status(500).json({ 
+      message: 'Server error creating product',
+      error: error.message
+    });
   }
 });
 
@@ -201,13 +298,75 @@ app.delete('/api/users/:userId/cart', async (req, res) => {
 
 // --- Order Routes ---
 app.post('/api/orders', async (req, res) => {
-    const { customerDetails, products, totalAmount, farmer } = req.body;
     try {
-        const newOrder = new Order({ customerDetails, products, totalAmount, farmer });
-        const order = await newOrder.save();
-        res.status(201).json(order);
+        const { customerDetails, products, totalAmount, farmer } = req.body;
+        
+        // Validate required fields
+        if (!customerDetails || !products || !totalAmount || !farmer) {
+            return res.status(400).json({
+                message: 'Missing required fields',
+                details: 'Please provide customerDetails, products, totalAmount, and farmer'
+            });
+        }
+
+        // Validate customer details
+        if (!customerDetails.name || !customerDetails.email || !customerDetails.phone) {
+            return res.status(400).json({
+                message: 'Missing customer details',
+                details: 'Name, email, and phone are required'
+            });
+        }
+
+        // Validate products array
+        if (!Array.isArray(products) || products.length === 0) {
+            return res.status(400).json({
+                message: 'Invalid products',
+                details: 'Products must be a non-empty array'
+            });
+        }
+
+        // Format the order data
+        const orderData = {
+            customerDetails: {
+                name: customerDetails.name.trim(),
+                email: customerDetails.email.trim().toLowerCase(),
+                phone: customerDetails.phone.trim(),
+                preferredPickupTime: customerDetails.preferredPickupTime?.trim() || '',
+                paymentMethod: customerDetails.paymentMethod || 'pickup',
+                specialInstructions: customerDetails.specialInstructions?.trim() || ''
+            },
+            products: products.map(product => ({
+                productId: product.productId,
+                name: product.name.trim(),
+                price: Number(product.price),
+                quantity: Number(product.quantity) || 1
+            })),
+            totalAmount: Number(totalAmount),
+            farmer: farmer.trim(),
+            status: 'Confirmed'
+        };
+
+        // Create and save the order
+        const newOrder = new Order(orderData);
+        const savedOrder = await newOrder.save();
+
+        console.log('Order created successfully:', savedOrder._id);
+        res.status(201).json({
+            message: 'Order created successfully',
+            order: savedOrder
+        });
     } catch (error) {
-        res.status(500).json({ message: 'Server Error creating order' });
+        console.error('Order creation error:', error);
+        if (error.name === 'ValidationError') {
+            return res.status(400).json({
+                message: 'Validation error',
+                details: Object.values(error.errors).map(err => err.message)
+            });
+        }
+        res.status(500).json({
+            message: 'Server Error creating order',
+            error: error.message
+        });
     }
 });
 
@@ -222,61 +381,86 @@ app.get('/api/orders/myorders/:customerName', async (req, res) => {
 });
 
 app.put('/api/orders/:orderId/status', async (req, res) => {
-  const { status } = req.body;
-  const { orderId } = req.params;
-
-  if (!['Pending', 'Shipped', 'Delivered'].includes(status)) {
-    return res.status(400).json({ message: 'Invalid status value.' });
-  }
-
   try {
+    const { status } = req.body;
+    const { orderId } = req.params;
+
+    // Validate status value
+    const validStatuses = ['Confirmed', 'Ready for Pickup', 'Completed'];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ 
+        message: `Invalid status value. Must be one of: ${validStatuses.join(', ')}`
+      });
+    }
+
+    // Find and update the order
     const order = await Order.findById(orderId);
     if (!order) {
       return res.status(404).json({ message: 'Order not found.' });
     }
 
+    // Update the order status
     order.status = status;
     await order.save();
 
-    if (!order.customerDetails || !order.customerDetails.email) {
-      console.log(`Email not sent: Order ${orderId} is missing a customer email address.`);
-      return res.json(order);
+    // Send email notification if email is available
+    if (order.customerDetails?.email) {
+      try {
+        const farmer = await User.findOne({ name: order.farmer });
+        const transporter = nodemailer.createTransport({
+          service: 'gmail',
+          auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS,
+          },
+        });
+
+        const statusMessages = {
+          'Confirmed': 'Your order has been confirmed and is being processed.',
+          'Ready for Pickup': 'Your order is ready for pickup! Please collect it at your convenience.',
+          'Completed': 'Thank you for collecting your order. We hope you enjoy your fresh produce!'
+        };
+
+        const mailOptions = {
+          from: `"AgriConnect" <${process.env.EMAIL_USER}>`,
+          to: order.customerDetails.email,
+          subject: `Your AgriConnect Order Status: ${status}`,
+          replyTo: farmer?.email,
+          html: `
+            <div style="font-family: Arial, sans-serif; padding: 20px;">
+              <h2>Order Status Update</h2>
+              <p>Hello ${order.customerDetails.name},</p>
+              <p>${statusMessages[status]}</p>
+              <p>Order ID: #${order._id.slice(-8).toUpperCase()}</p>
+              <p>Current Status: <strong>${status}</strong></p>
+              <p>Total Amount: ₹${order.totalAmount.toFixed(2)}</p>
+              <hr>
+              <p>If you have any questions, you can reply to this email to contact the farmer directly.</p>
+              <p>Thank you for using AgriConnect!</p>
+            </div>
+          `
+        };
+
+        await transporter.sendMail(mailOptions);
+        console.log('Status update email sent to:', order.customerDetails.email);
+      } catch (emailError) {
+        console.error("Failed to send status update email:", emailError);
+        // Continue with the response even if email fails
+      }
     }
 
-    const farmer = await User.findOne({ name: order.farmer });
-    if (!farmer || !farmer.email) {
-      console.error(`Could not find farmer or farmer's email for order ${orderId} to set Reply-To address.`);
-    }
-
-    try {
-      const transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS,
-        },
-      });
-
-      const mailOptions = {
-        from: `"FarmConnect" <${process.env.EMAIL_USER}>`,
-        to: order.customerDetails.email,
-        subject: `Your FarmConnect Order Status: ${status}`,
-        replyTo: farmer ? farmer.email : undefined,
-        html: `...`, // Your email HTML body
-      };
-
-      await transporter.sendMail(mailOptions);
-      console.log('Status update email sent to:', order.customerDetails.email);
-
-    } catch (emailError) {
-      console.error("Failed to send status update email:", emailError);
-    }
-
-    res.json(order);
+    // Send success response
+    res.json({ 
+      message: 'Order status updated successfully',
+      order 
+    });
 
   } catch (error) {
     console.error("Error updating order status:", error);
-    res.status(500).json({ message: 'Server error updating order status.' });
+    res.status(500).json({ 
+      message: 'Failed to update order status',
+      error: error.message 
+    });
   }
 });
 

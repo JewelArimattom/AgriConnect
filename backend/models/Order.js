@@ -10,28 +10,40 @@ const orderSchema = new mongoose.Schema({
       type: String, 
       required: true 
     },
-    address: { 
-      type: String, 
-      required: true 
+    phone: {
+      type: String,
+      required: true
+    },
+    preferredPickupTime: {
+      type: String,
+      required: false
+    },
+    paymentMethod: {
+      type: String,
+      enum: ['online', 'pickup'],
+      default: 'pickup'
+    },
+    specialInstructions: {
+      type: String,
+      required: false
     }
   },
   products: [{
     productId: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'Product',
+      type: String,
       required: true
     },
     name: { 
       type: String, 
       required: true 
     },
-    quantity: { 
-      type: Number, 
-      required: true 
-    },
     price: { 
       type: String, 
       required: true 
+    },
+    quantity: { 
+      type: Number, 
+      default: 1
     }
   }],
   totalAmount: { 
@@ -40,8 +52,8 @@ const orderSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['Pending', 'Shipped', 'Delivered'],
-    default: 'Pending'
+    enum: ['Confirmed', 'Ready for Pickup', 'Completed'],
+    default: 'Confirmed'
   },
   farmer: { 
     type: String, 

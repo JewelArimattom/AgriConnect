@@ -57,32 +57,63 @@ const CheckoutPage = () => {
     const farmerName = (cartItems[0] as any)?.farmer;
 
     try {
+      // Validate that we have items in cart
+      if (cartItems.length === 0) {
+        throw new Error("Your cart is empty");
+      }
+
+      // Validate all required fields
+      if (!formData.name || !formData.phone || !formData.email) {
+        throw new Error("Please fill in all required fields");
+      }
+
+      // Validate phone number format
+      const phoneRegex = /^[0-9]{10}$/;
+      if (!phoneRegex.test(formData.phone.replace(/[^0-9]/g, ''))) {
+        throw new Error("Please enter a valid 10-digit phone number");
+      }
+
+      // Clean and validate email
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(formData.email.trim())) {
+        throw new Error("Please enter a valid email address");
+      }
+
+      // Format order data
+      const orderData = {
+        customerDetails: {
+          name: formData.name.trim(),
+          phone: formData.phone.replace(/[^0-9]/g, ''),
+          email: formData.email.trim(),
+          preferredPickupTime: formData.preferredPickupTime || '',
+          paymentMethod: formData.paymentMethod,
+          specialInstructions: formData.specialInstructions?.trim() || '',
+        },
+        products: cartItems.map((item: any) => ({
+          productId: item._id || item.id,
+          name: item.name,
+          price: item.price,
+          quantity: 1
+        })),
+        totalAmount: Number(total),
+        farmer: farmerName,
+        status: 'Confirmed'
+      };
+
+      console.log('Sending order data:', orderData); // Debug log
+
       const response = await fetch("http://localhost:5000/api/orders", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          customerDetails: {
-            name: formData.name,
-            phone: formData.phone,
-            email: formData.email,
-            preferredPickupTime: formData.preferredPickupTime,
-            paymentMethod: formData.paymentMethod,
-            specialInstructions: formData.specialInstructions,
-          },
-          products: cartItems.map((item: any) => ({
-            productId: item._id || item.id,
-            name: item.name,
-            price: item.price,
-          })),
-          totalAmount: total,
-          farmer: farmerName,
-          bookingType: "pickup", // Indicate this is a pickup booking
-        }),
+        headers: { 
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(orderData),
       });
 
+      const data = await response.json();
+      
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to place order.");
+        throw new Error(data.message || "Failed to place order.");
       }
 
       clearCart();

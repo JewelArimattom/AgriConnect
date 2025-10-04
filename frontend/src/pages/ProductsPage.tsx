@@ -4,10 +4,10 @@ import {
   HiSearch,
   HiFilter,
   HiX,
-  HiStar,
   HiShoppingCart,
   HiAdjustments,
   HiCheckCircle,
+  HiLocationMarker,
 } from "react-icons/hi";
 import { FaLeaf, FaSeedling, FaTractor } from "react-icons/fa";
 
@@ -18,9 +18,9 @@ interface Product {
   description: string;
   imageUrl: string;
   farmer: string;
+  location: string;
   category: string;
   price: string;
-  rating: number;
   inStock?: boolean; // Changed to optional
   organic: boolean;
 }
@@ -34,7 +34,6 @@ interface FilterState {
   category: string;
   priceRange: PriceRange;
   farmers: string[];
-  rating: number;
   inStock: boolean;
   organic: boolean;
   searchQuery: string;
@@ -52,7 +51,6 @@ const ProductsPage = () => {
     category: "All",
     priceRange: { min: 0, max: maxPrice }, // Use the new max price
     farmers: [],
-    rating: 0,
     inStock: false,
     organic: false,
     searchQuery: "",
@@ -114,9 +112,6 @@ const ProductsPage = () => {
         filters.farmers.includes(product.farmer)
       );
     }
-    if (filters.rating > 0) {
-      filtered = filtered.filter((product) => product.rating >= filters.rating);
-    }
     if (filters.inStock) {
       // Logic: Only show items where inStock is NOT explicitly false
       filtered = filtered.filter((product) => product.inStock !== false);
@@ -145,9 +140,6 @@ const ProductsPage = () => {
       case "name-desc":
         filtered.sort((a, b) => b.name.localeCompare(a.name));
         break;
-      case "rating-desc":
-        filtered.sort((a, b) => b.rating - a.rating);
-        break;
       default:
         break;
     }
@@ -172,7 +164,6 @@ const ProductsPage = () => {
       category: "All",
       priceRange: { min: 0, max: maxPrice },
       farmers: [],
-      rating: 0,
       inStock: false,
       organic: false,
       searchQuery: "",
@@ -186,7 +177,6 @@ const ProductsPage = () => {
     if (filters.priceRange.min > 0 || filters.priceRange.max < maxPrice)
       count++;
     if (filters.farmers.length > 0) count++;
-    if (filters.rating > 0) count++;
     if (filters.inStock) count++;
     if (filters.organic) count++;
     if (filters.searchQuery) count++;
@@ -321,7 +311,6 @@ const ProductsPage = () => {
                 <option value="price-desc">Price: High to Low</option>
                 <option value="name-asc">Name: A-Z</option>
                 <option value="name-desc">Name: Z-A</option>
-                <option value="rating-desc">Highest Rated</option>
               </select>
             </div>
           </div>
@@ -446,35 +435,7 @@ const ProductsPage = () => {
                     </div>
                   </div>
 
-                  <div className="mb-6">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                      <HiStar className="w-5 h-5 mr-2 text-yellow-500" />
-                      Minimum Rating
-                    </h3>
-                    <div className="flex space-x-2 bg-gray-50 rounded-xl p-4 justify-center">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <button
-                          key={star}
-                          onClick={() => updateFilter("rating", star)}
-                          className={`p-2 rounded-lg transition-all duration-200 ${
-                            filters.rating >= star
-                              ? "text-yellow-400 bg-yellow-50 scale-110 shadow-md"
-                              : "text-gray-300 hover:text-yellow-200 hover:bg-gray-100"
-                          }`}
-                        >
-                          <HiStar className="w-7 h-7" />
-                        </button>
-                      ))}
-                    </div>
-                    {filters.rating > 0 && (
-                      <button
-                        onClick={() => updateFilter("rating", 0)}
-                        className="text-sm text-red-600 hover:text-red-700 mt-3 font-semibold hover:underline"
-                      >
-                        Clear rating filter
-                      </button>
-                    )}
-                  </div>
+
 
                   <div className="space-y-4">
                     <label className="flex items-center space-x-3 cursor-pointer bg-gray-50 p-4 rounded-xl hover:bg-green-50 transition-all duration-200 border-2 border-transparent hover:border-green-200">
@@ -544,28 +505,28 @@ const ProductsPage = () => {
                       )}
                     </div>
                     <div className="p-6">
-                      <div className="flex justify-between items-start mb-3">
-                        <h3 className="text-xl font-bold text-gray-900 group-hover:text-green-600 transition-colors">
-                          {product.name}
-                        </h3>
-                        <div className="flex items-center space-x-1 bg-yellow-50 px-3 py-1 rounded-lg">
-                          <HiStar className="w-5 h-5 text-yellow-500" />
-                          <span className="text-gray-900 font-semibold">
-                            {product.rating}
+                      <h3 className="text-xl font-bold text-gray-900 group-hover:text-green-600 transition-colors mb-3">
+                        {product.name}
+                      </h3>
+                      <div className="space-y-2 mb-4">
+                        <div className="flex items-center justify-between">
+                          <p className="text-sm text-gray-600 flex items-center">
+                            <FaTractor className="w-4 h-4 mr-2 text-green-600" />
+                            <span className="font-medium">{product.farmer}</span>
+                          </p>
+                          <span className="text-xs bg-gray-100 px-3 py-1 rounded-full text-gray-600 font-semibold">
+                            {product.category}
                           </span>
                         </div>
-                      </div>
-                      <p className="text-sm text-gray-600 mb-4 flex items-center">
-                        <FaTractor className="w-4 h-4 mr-2 text-green-600" />
-                        from {product.farmer}
-                      </p>
-                      <div className="flex items-center justify-between mb-4">
-                        <p className="text-2xl font-bold text-green-600">
-                          {product.price}
-                        </p>
-                        <span className="text-xs bg-gray-100 px-3 py-1 rounded-full text-gray-600 font-semibold">
-                          {product.category}
-                        </span>
+                        <div className="flex items-center justify-between">
+                          <p className="text-sm text-gray-600 flex items-center">
+                            <HiLocationMarker className="w-4 h-4 mr-2 text-green-600" />
+                            <span>{product.location}</span>
+                          </p>
+                          <p className="text-xl font-bold text-green-600">
+                            {product.price}
+                          </p>
+                        </div>
                       </div>
                       <Link
                         to={`/product/${product._id}`}
