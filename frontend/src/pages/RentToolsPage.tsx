@@ -400,7 +400,7 @@ const RentToolsPage = () => {
                         className="h-full w-full object-cover"
                         src={
                           tool.imageUrl ||
-                          "https://placehold.co/600x400/22c55e/FFFFFF?text=Tool+Image"
+                          "https://media.istockphoto.com/id/505022500/photo/green-tractor.jpg?s=612x612&w=0&k=20&c=81hNsPmJ8UhKMqyd2Gx1DHB4vIJISCBvidWwNWP2Gtw="
                         }
                         alt={tool.name}
                       />
