@@ -30,28 +30,62 @@ mongoose.connect(process.env.MONGO_URI)
 app.post('/api/auth/signup', async (req, res) => {
   const { name, email, password } = req.body;
   try {
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: 'Please provide all required fields' });
+    }
+
     const userExists = await User.findOne({ email });
     if (userExists) {
       return res.status(400).json({ message: 'User with this email already exists' });
     }
-    const user = await User.create({ name, email, password });
-    res.status(201).json({ _id: user._id, name: user.name, email: user.email });
+
+    const user = new User({ name, email, password });
+    await user.save();
+    
+    res.status(201).json({
+      _id: user._id,
+      name: user.name,
+      email: user.email
+    });
   } catch (error) {
-    res.status(500).json({ message: 'Server error during sign up' });
+    console.error('Signup error:', error);
+    res.status(500).json({ 
+      message: 'Server error during sign up',
+      error: error.message 
+    });
   }
 });
 
 app.post('/api/auth/login', async (req, res) => {
   const { email, password } = req.body;
   try {
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Please provide both email and password' });
+    }
+
     const user = await User.findOne({ email });
-    if (user && (await user.matchPassword(password))) {
-      res.json({ _id: user._id, name: user.name, email: user.email });
+    
+    if (!user) {
+      return res.status(401).json({ message: 'User not found' });
+    }
+
+    const isMatch = await user.matchPassword(password);
+    
+    if (isMatch) {
+      res.json({
+        _id: user._id,
+        name: user.name,
+        email: user.email
+      });
     } else {
-      res.status(401).json({ message: 'Invalid email or password' });
+      res.status(401).json({ message: 'Invalid password' });
     }
   } catch (error) {
-    res.status(500).json({ message: 'Server error during login' });
+    console.error('Login error:', error);
+    res.status(500).json({ 
+      message: 'Server error during login',
+      error: error.message 
+    });
   }
 });
 
