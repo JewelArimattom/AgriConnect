@@ -1,18 +1,18 @@
 // LatestCollection.tsx
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { HiShoppingCart, HiLocationMarker, HiStar } from "react-icons/hi";
-import { FaLeaf } from "react-icons/fa";
+import { HiShoppingCart, HiLocationMarker } from "react-icons/hi";
+import { FaLeaf, FaTractor } from "react-icons/fa";
 
 interface Product {
   _id: string;
   name: string;
+  location: string;
   farmer: string;
   price: string;
   imageUrl: string;
   buyType?: string;
   category?: string;
-  subCategory?: string;
 }
 
 const LatestCollection = () => {
@@ -155,20 +155,15 @@ const LatestCollection = () => {
                 </h3>
 
                 {/* Farmer Info */}
-                <div className="flex items-center text-sm text-gray-600 mb-4">
-                  <HiLocationMarker className="w-4 h-4 mr-1 text-green-600" />
-                  <span className="line-clamp-1">{product.farmer}</span>
-                </div>
-
-                {/* Rating */}
-                <div className="flex items-center mb-4">
-                  {[...Array(5)].map((_, i) => (
-                    <HiStar
-                      key={i}
-                      className="w-4 h-4 text-yellow-400 fill-current"
-                    />
-                  ))}
-                  <span className="text-xs text-gray-600 ml-2">(4.8)</span>
+                <div className="space-y-2 mb-4">
+                  <div className="flex items-center text-sm text-gray-600">
+                    <FaTractor className="w-4 h-4 mr-1 text-green-600" />
+                    <span className="line-clamp-1">{product.farmer}</span>
+                  </div>
+                  <div className="flex items-center text-sm text-gray-600">
+                    <HiLocationMarker className="w-4 h-4 mr-1 text-green-600" />
+                    <span className="line-clamp-1">{product.location}</span>
+                  </div>
                 </div>
 
                 {/* Price and Action */}

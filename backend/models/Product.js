@@ -5,6 +5,10 @@ const productSchema = new mongoose.Schema({
     type: String, 
     required: true 
   },
+  location: {
+    type: String,
+    required: true
+  },
   description: { 
     type: String, 
     required: true 
@@ -90,10 +94,6 @@ const productSchema = new mongoose.Schema({
   organic: {
     type: Boolean,
     default: false
-  },
-  rating: {
-    type: Number,
-    default: 0
   }
 }, {
   timestamps: true 

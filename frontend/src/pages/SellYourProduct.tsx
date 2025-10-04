@@ -20,6 +20,7 @@ const SellYourProduct = () => {
     name: "",
     description: "",
     imageUrl: "",
+    location: "",
     category: "Produce",
     buyType: "direct_buy",
     price: "",
@@ -126,6 +127,20 @@ const SellYourProduct = () => {
                   value={formData.name}
                   onChange={handleChange}
                   placeholder="e.g., Organic Apples, Fresh Tomatoes"
+                  required
+                  className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Farm Location *
+                </label>
+                <input
+                  name="location"
+                  value={formData.location}
+                  onChange={handleChange}
+                  placeholder="e.g., Thrissur, Kerala"
                   required
                   className="w-full p-4 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
                 />
