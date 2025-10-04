@@ -74,6 +74,11 @@ interface WeatherData {
   condition: string;
   windSpeed: number;
   description: string;
+  location: string;
+  feelsLike: number;
+  uvIndex: number;
+  visibility: number;
+  lastUpdated: string;
 }
 
 const FarmersTechTools = () => {
@@ -133,17 +138,9 @@ const FarmersTechTools = () => {
     }
   };
 
-  // Mock weather data
+  // Initialize weather data on component mount
   useEffect(() => {
-    const mockWeather: WeatherData = {
-      temperature: 28,
-      humidity: 65,
-      rainfall: 0,
-      condition: "Sunny",
-      windSpeed: 12,
-      description: "Perfect weather for farming activities",
-    };
-    setWeatherData(mockWeather);
+    fetchWeatherData();
   }, []);
 
   // Gemini AI API call function with fallback models
@@ -389,6 +386,77 @@ Provide at least 8 diverse commodities including crops, animals, and plants.`;
         },
       ];
       setMarketPrices(mockPrices);
+    }
+    setLoading(false);
+  };
+
+  // Fetch weather data from WeatherAPI.com
+  const fetchWeatherData = async (weatherLocation?: string) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const WEATHER_API_KEY = import.meta.env.VITE_WEATHER_API_KEY;
+
+      if (!WEATHER_API_KEY) {
+        throw new Error("Weather API key not found in environment variables");
+      }
+
+      // Use provided location or current location or default to "auto:ip" for IP-based location
+      const query = weatherLocation || location || "auto:ip";
+
+      const response = await fetch(
+        `https://api.weatherapi.com/v1/current.json?key=${WEATHER_API_KEY}&q=${encodeURIComponent(
+          query
+        )}&aqi=no`
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(
+          `Weather API error: ${errorData.error?.message || "Unknown error"}`
+        );
+      }
+
+      const data = await response.json();
+
+      // Transform WeatherAPI response to our WeatherData interface
+      const weatherData: WeatherData = {
+        temperature: Math.round(data.current.temp_c),
+        humidity: data.current.humidity,
+        rainfall: data.current.precip_mm,
+        condition: data.current.condition.text,
+        windSpeed: Math.round(data.current.wind_kph),
+        description: `Weather in ${data.location.name}, ${data.location.region}`,
+        location: `${data.location.name}, ${data.location.region}`,
+        feelsLike: Math.round(data.current.feelslike_c),
+        uvIndex: data.current.uv,
+        visibility: data.current.vis_km,
+        lastUpdated: data.current.last_updated,
+      };
+
+      setWeatherData(weatherData);
+    } catch (error) {
+      console.error("Error fetching weather data:", error);
+      setError(
+        "Failed to fetch weather data. Please check your location and try again."
+      );
+
+      // Fallback to mock data
+      const mockWeather: WeatherData = {
+        temperature: 28,
+        humidity: 65,
+        rainfall: 0,
+        condition: "Sunny",
+        windSpeed: 12,
+        description: "Perfect weather for farming activities",
+        location: weatherLocation || location || "Current Location",
+        feelsLike: 30,
+        uvIndex: 7,
+        visibility: 10,
+        lastUpdated: new Date().toLocaleString(),
+      };
+      setWeatherData(mockWeather);
     }
     setLoading(false);
   };
@@ -1410,6 +1478,9 @@ Ensure all fields are filled with detailed, practical information specific to ${
                   <div className="text-xs text-gray-600">
                     {weatherData.condition}
                   </div>
+                  <div className="text-xs text-gray-500">
+                    {weatherData.location}
+                  </div>
                 </div>
                 <div className="flex items-center space-x-4 ml-4">
                   <div className="flex items-center">
@@ -1422,6 +1493,12 @@ Ensure all fields are filled with detailed, practical information specific to ${
                     <Zap className="w-4 h-4 text-gray-500 mr-1" />
                     <span className="text-sm text-gray-700">
                       {weatherData.windSpeed}km/h
+                    </span>
+                  </div>
+                  <div className="flex items-center">
+                    <Sun className="w-4 h-4 text-orange-500 mr-1" />
+                    <span className="text-sm text-gray-700">
+                      UV {weatherData.uvIndex}
                     </span>
                   </div>
                 </div>
@@ -2258,52 +2335,237 @@ Ensure all fields are filled with detailed, practical information specific to ${
             </div>
 
             <div className="p-8">
+              {/* Weather Location Input */}
+              <div className="mb-6">
+                <div className="flex gap-4 items-end">
+                  <div className="flex-1">
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">
+                      <MapPin className="w-4 h-4 inline mr-1" />
+                      Location for Weather
+                    </label>
+                    <input
+                      type="text"
+                      value={location}
+                      onChange={(e) => setLocation(e.target.value)}
+                      placeholder="Enter city name or use current location"
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                    />
+                    {userLocation && (
+                      <p className="text-xs text-green-600 mt-2 flex items-center">
+                        <CheckCircle className="w-3 h-3 mr-1" />
+                        Using your current location
+                      </p>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => fetchWeatherData()}
+                    className="bg-blue-600 text-white px-6 py-3 rounded-xl font-semibold hover:bg-blue-700 transition-all flex items-center"
+                  >
+                    <Cloud className="w-5 h-5 mr-2" />
+                    Get Weather
+                  </button>
+                </div>
+              </div>
+
               {weatherData ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl p-6 border-2 border-yellow-200">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="font-bold text-yellow-900">Temperature</h3>
-                      <Sun className="w-8 h-8 text-yellow-500" />
+                <div className="space-y-6">
+                  {/* Current Weather Cards */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl p-6 border-2 border-yellow-200">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="font-bold text-yellow-900">
+                          Temperature
+                        </h3>
+                        <Sun className="w-8 h-8 text-yellow-500" />
+                      </div>
+                      <p className="text-4xl font-bold text-yellow-900">
+                        {weatherData.temperature}°C
+                      </p>
+                      <p className="text-yellow-700 text-sm mt-2">
+                        Feels like {weatherData.feelsLike}°C
+                      </p>
+                      <p className="text-yellow-600 text-xs mt-1">
+                        {weatherData.condition}
+                      </p>
                     </div>
-                    <p className="text-4xl font-bold text-yellow-900">
-                      {weatherData.temperature}°C
-                    </p>
-                    <p className="text-yellow-700 text-sm mt-2">
-                      {weatherData.condition}
-                    </p>
+
+                    <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl p-6 border-2 border-blue-200">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="font-bold text-blue-900">Humidity</h3>
+                        <CloudRain className="w-8 h-8 text-blue-500" />
+                      </div>
+                      <p className="text-4xl font-bold text-blue-900">
+                        {weatherData.humidity}%
+                      </p>
+                      <p className="text-blue-700 text-sm mt-2">
+                        Moisture level
+                      </p>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-gray-50 to-slate-50 rounded-xl p-6 border-2 border-gray-200">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="font-bold text-gray-900">Wind Speed</h3>
+                        <Zap className="w-8 h-8 text-gray-500" />
+                      </div>
+                      <p className="text-4xl font-bold text-gray-900">
+                        {weatherData.windSpeed}
+                      </p>
+                      <p className="text-gray-700 text-sm mt-2">km/h</p>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl p-6 border-2 border-indigo-200">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="font-bold text-indigo-900">Rainfall</h3>
+                        <Cloud className="w-8 h-8 text-indigo-500" />
+                      </div>
+                      <p className="text-4xl font-bold text-indigo-900">
+                        {weatherData.rainfall}
+                      </p>
+                      <p className="text-indigo-700 text-sm mt-2">mm today</p>
+                    </div>
                   </div>
 
-                  <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl p-6 border-2 border-blue-200">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="font-bold text-blue-900">Humidity</h3>
-                      <CloudRain className="w-8 h-8 text-blue-500" />
+                  {/* Additional Weather Info */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-6 border-2 border-green-200">
+                      <h4 className="font-bold text-green-900 mb-3 flex items-center">
+                        <Sun className="w-5 h-5 mr-2" />
+                        UV Index
+                      </h4>
+                      <p className="text-2xl font-bold text-green-900">
+                        {weatherData.uvIndex}
+                      </p>
+                      <p className="text-green-700 text-sm mt-1">
+                        {weatherData.uvIndex <= 2
+                          ? "Low"
+                          : weatherData.uvIndex <= 5
+                          ? "Moderate"
+                          : weatherData.uvIndex <= 7
+                          ? "High"
+                          : weatherData.uvIndex <= 10
+                          ? "Very High"
+                          : "Extreme"}
+                      </p>
                     </div>
-                    <p className="text-4xl font-bold text-blue-900">
-                      {weatherData.humidity}%
-                    </p>
-                    <p className="text-blue-700 text-sm mt-2">Moisture level</p>
+
+                    <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl p-6 border-2 border-purple-200">
+                      <h4 className="font-bold text-purple-900 mb-3 flex items-center">
+                        <Cloud className="w-5 h-5 mr-2" />
+                        Visibility
+                      </h4>
+                      <p className="text-2xl font-bold text-purple-900">
+                        {weatherData.visibility} km
+                      </p>
+                      <p className="text-purple-700 text-sm mt-1">
+                        {weatherData.visibility >= 10
+                          ? "Excellent"
+                          : weatherData.visibility >= 5
+                          ? "Good"
+                          : weatherData.visibility >= 2
+                          ? "Moderate"
+                          : "Poor"}
+                      </p>
+                    </div>
+
+                    <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-xl p-6 border-2 border-orange-200">
+                      <h4 className="font-bold text-orange-900 mb-3 flex items-center">
+                        <MapPin className="w-5 h-5 mr-2" />
+                        Location
+                      </h4>
+                      <p className="text-orange-900 font-medium">
+                        {weatherData.location}
+                      </p>
+                      <p className="text-orange-700 text-sm mt-1">
+                        Last updated:{" "}
+                        {new Date(weatherData.lastUpdated).toLocaleString()}
+                      </p>
+                    </div>
                   </div>
 
-                  <div className="bg-gradient-to-br from-gray-50 to-slate-50 rounded-xl p-6 border-2 border-gray-200">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="font-bold text-gray-900">Wind Speed</h3>
-                      <Zap className="w-8 h-8 text-gray-500" />
-                    </div>
-                    <p className="text-4xl font-bold text-gray-900">
-                      {weatherData.windSpeed}
-                    </p>
-                    <p className="text-gray-700 text-sm mt-2">km/h</p>
+                  {/* Weather-Based Farming Recommendations */}
+                  <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-6">
+                    <h3 className="font-bold text-blue-900 mb-4">
+                      Weather-Based Farming Recommendations
+                    </h3>
+                    <ul className="space-y-3 text-blue-800">
+                      <li className="flex items-start">
+                        <CheckCircle className="w-5 h-5 mr-2 mt-0.5 flex-shrink-0" />
+                        <span>
+                          {weatherData.temperature >= 25 &&
+                          weatherData.temperature <= 35
+                            ? "Current temperature is ideal for most farming activities and crop growth"
+                            : weatherData.temperature < 15
+                            ? "Cool temperatures - consider protecting sensitive crops from cold"
+                            : "High temperatures - ensure adequate irrigation and consider shade for seedlings"}
+                        </span>
+                      </li>
+                      <li className="flex items-start">
+                        <CheckCircle className="w-5 h-5 mr-2 mt-0.5 flex-shrink-0" />
+                        <span>
+                          {weatherData.humidity >= 40 &&
+                          weatherData.humidity <= 70
+                            ? "Humidity levels are optimal for plant health"
+                            : weatherData.humidity > 80
+                            ? "High humidity - monitor for fungal diseases and ensure good air circulation"
+                            : "Low humidity - increase irrigation frequency and consider misting"}
+                        </span>
+                      </li>
+                      <li className="flex items-start">
+                        <CheckCircle className="w-5 h-5 mr-2 mt-0.5 flex-shrink-0" />
+                        <span>
+                          {weatherData.windSpeed <= 15
+                            ? "Wind conditions are favorable for spraying pesticides and fieldwork"
+                            : "Strong winds - avoid spraying operations and secure loose farming equipment"}
+                        </span>
+                      </li>
+                      <li className="flex items-start">
+                        <CheckCircle className="w-5 h-5 mr-2 mt-0.5 flex-shrink-0" />
+                        <span>
+                          {weatherData.rainfall > 0
+                            ? `Recent rainfall (${weatherData.rainfall}mm) - consider reducing irrigation and monitor soil moisture`
+                            : "No recent rainfall - ensure adequate irrigation for crops"}
+                        </span>
+                      </li>
+                      <li className="flex items-start">
+                        <CheckCircle className="w-5 h-5 mr-2 mt-0.5 flex-shrink-0" />
+                        <span>
+                          {weatherData.uvIndex <= 7
+                            ? "UV levels are safe for outdoor farming work"
+                            : "High UV index - use protective clothing and sunscreen during outdoor activities"}
+                        </span>
+                      </li>
+                    </ul>
                   </div>
 
-                  <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-xl p-6 border-2 border-indigo-200">
-                    <div className="flex items-center justify-between mb-4">
-                      <h3 className="font-bold text-indigo-900">Rainfall</h3>
-                      <Cloud className="w-8 h-8 text-indigo-500" />
+                  {/* 7-Day Farming Forecast (Mock for now) */}
+                  <div className="bg-green-50 border-2 border-green-200 rounded-xl p-6">
+                    <h3 className="font-bold text-green-900 mb-4 flex items-center">
+                      <Heart className="w-5 h-5 mr-2" />
+                      7-Day Farming Forecast
+                    </h3>
+                    <div className="grid grid-cols-2 md:grid-cols-7 gap-2">
+                      {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map(
+                        (day, index) => (
+                          <div
+                            key={day}
+                            className="text-center bg-white rounded-lg p-3 border border-green-100"
+                          >
+                            <p className="font-semibold text-gray-900">{day}</p>
+                            <Sun className="w-6 h-6 text-yellow-500 mx-auto my-1" />
+                            <p className="text-sm font-bold text-gray-900">
+                              {28 + index}°C
+                            </p>
+                            <p className="text-xs text-gray-600">
+                              {65 - index}% humidity
+                            </p>
+                          </div>
+                        )
+                      )}
                     </div>
-                    <p className="text-4xl font-bold text-indigo-900">
-                      {weatherData.rainfall}
+                    <p className="text-green-700 text-sm mt-4">
+                      * 7-day forecast feature coming soon with premium
+                      WeatherAPI plan
                     </p>
-                    <p className="text-indigo-700 text-sm mt-2">mm today</p>
                   </div>
                 </div>
               ) : (
@@ -2312,68 +2574,6 @@ Ensure all fields are filled with detailed, practical information specific to ${
                   <p className="text-gray-600">Loading weather data...</p>
                 </div>
               )}
-
-              <div className="mt-8 bg-blue-50 border-2 border-blue-200 rounded-xl p-6">
-                <h3 className="font-bold text-blue-900 mb-4">
-                  Weather-Based Farming Recommendations
-                </h3>
-                <ul className="space-y-3 text-blue-800">
-                  <li className="flex items-start">
-                    <CheckCircle className="w-5 h-5 mr-2 mt-0.5 flex-shrink-0" />
-                    <span>
-                      Current conditions are favorable for fieldwork and
-                      planting activities
-                    </span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="w-5 h-5 mr-2 mt-0.5 flex-shrink-0" />
-                    <span>
-                      Consider irrigation based on humidity levels and
-                      temperature
-                    </span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="w-5 h-5 mr-2 mt-0.5 flex-shrink-0" />
-                    <span>
-                      Monitor for pest activity in current warm and humid
-                      conditions
-                    </span>
-                  </li>
-                  <li className="flex items-start">
-                    <CheckCircle className="w-5 h-5 mr-2 mt-0.5 flex-shrink-0" />
-                    <span>
-                      Ideal weather for fertilizer application and soil
-                      preparation
-                    </span>
-                  </li>
-                </ul>
-              </div>
-
-              <div className="mt-6 bg-green-50 border-2 border-green-200 rounded-xl p-6">
-                <h3 className="font-bold text-green-900 mb-4 flex items-center">
-                  <Heart className="w-5 h-5 mr-2" />
-                  7-Day Farming Forecast
-                </h3>
-                <div className="grid grid-cols-2 md:grid-cols-7 gap-2">
-                  {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map(
-                    (day, index) => (
-                      <div
-                        key={day}
-                        className="text-center bg-white rounded-lg p-3 border border-green-100"
-                      >
-                        <p className="font-semibold text-gray-900">{day}</p>
-                        <Sun className="w-6 h-6 text-yellow-500 mx-auto my-1" />
-                        <p className="text-sm font-bold text-gray-900">
-                          {28 + index}°C
-                        </p>
-                        <p className="text-xs text-gray-600">
-                          {65 - index}% humidity
-                        </p>
-                      </div>
-                    )
-                  )}
-                </div>
-              </div>
             </div>
           </div>
         )}
