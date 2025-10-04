@@ -12,13 +12,6 @@ import { FaLeaf, FaSeedling, FaTractor } from "react-icons/fa";
 
 const API_URL = "http://localhost:5000/api/products";
 
-const subCategoryMap: { [key: string]: string[] } = {
-  Produce: ["Fruits", "Vegetables", "Herbs"],
-  "Animal Products": ["Dairy & Eggs", "Meat & Poultry", "Seafood"],
-  Pantry: ["Grains", "Spices", "Oils & Sauces"],
-  "Artisanal Goods": ["Cheese", "Honey", "Jams"],
-};
-
 const SellYourProduct = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -28,7 +21,6 @@ const SellYourProduct = () => {
     description: "",
     imageUrl: "",
     category: "Produce",
-    subCategory: "",
     buyType: "direct_buy",
     price: "",
     startingBid: "",
@@ -45,18 +37,10 @@ const SellYourProduct = () => {
   ) => {
     const { name, value } = e.target;
 
-    if (name === "category") {
-      setFormData({
-        ...formData,
-        category: value,
-        subCategory: "",
-      });
-    } else {
-      setFormData({
-        ...formData,
-        [name]: value,
-      });
-    }
+    setFormData({
+      ...formData,
+      [name]: value,
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -95,8 +79,6 @@ const SellYourProduct = () => {
       setIsLoading(false);
     }
   };
-
-  const currentSubCategories = subCategoryMap[formData.category] || [];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-green-50 py-12">
@@ -199,52 +181,32 @@ const SellYourProduct = () => {
                 <h2 className="text-2xl font-bold text-gray-900">Category</h2>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
-                    Main Category *
-                  </label>
-                  <select
-                    name="category"
-                    value={formData.category}
-                    onChange={handleChange}
-                    required
-                    className="w-full p-4 border-2 border-gray-200 bg-white rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all font-semibold"
-                  >
-                    <option value="Produce">🍎 Produce</option>
-                    <option value="Animal Products">🥛 Animal Products</option>
-                    <option value="Bakery">🍞 Bakery</option>
-                    <option value="Pantry">🌾 Pantry</option>
-                    <option value="Artisanal Goods">🧀 Artisanal Goods</option>
-                    <option value="Plants & Flowers">
-                      🌺 Plants & Flowers
-                    </option>
-                  </select>
-                </div>
-
-                {currentSubCategories.length > 0 && (
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                      Sub-Category *
-                    </label>
-                    <select
-                      name="subCategory"
-                      value={formData.subCategory}
-                      onChange={handleChange}
-                      required
-                      className="w-full p-4 border-2 border-gray-200 bg-white rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all font-semibold"
-                    >
-                      <option value="" disabled>
-                        -- Select Sub-Category --
-                      </option>
-                      {currentSubCategories.map((sub) => (
-                        <option key={sub} value={sub}>
-                          {sub}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Category *
+                </label>
+                <select
+                  name="category"
+                  value={formData.category}
+                  onChange={handleChange}
+                  required
+                  className="w-full p-4 border-2 border-gray-200 bg-white rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all font-semibold"
+                >
+                  <option value="Vegetables">Vegetables</option>
+                  <option value="Fruits">Fruits</option>
+                  <option value="Grains & Pulses">Grains & Pulses</option>
+                  <option value="Spices & Herbs">Spices & Herbs</option>
+                  <option value="Dairy & Milk Products">Dairy & Milk Products</option>
+                  <option value="Animal">Animal</option>
+                  <option value="Fertilizers">Fertilizers</option>
+                  <option value="Seeds">Seeds</option>
+                  <option value="Plants">Plants</option>
+                  <option value="Bio-Fertilizers">Bio-Fertilizers</option>
+                  <option value="Homemade Foods">Homemade Foods</option>
+                  <option value="Farm Tools & Equipment">Farm Tools & Equipment</option>
+                  <option value="Dry Fruits & Nuts">Dry Fruits & Nuts</option>
+                  <option value="Honey & Bee Products">Honey & Bee Products</option>
+                </select>
               </div>
             </div>
 
