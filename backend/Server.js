@@ -298,13 +298,61 @@ app.delete('/api/users/:userId/cart', async (req, res) => {
 
 // --- Order Routes ---
 app.post('/api/orders', async (req, res) => {
-    const { customerDetails, products, totalAmount, farmer } = req.body;
     try {
-        const newOrder = new Order({ customerDetails, products, totalAmount, farmer });
+        const { customerDetails, products, totalAmount, farmer } = req.body;
+        
+        // Validate required fields
+        if (!customerDetails || !products || !totalAmount || !farmer) {
+            return res.status(400).json({
+                message: 'Missing required fields for order creation'
+            });
+        }
+
+        // Validate customer details
+        const requiredCustomerFields = ['name', 'email', 'phone'];
+        const missingFields = requiredCustomerFields.filter(field => !customerDetails[field]);
+        
+        if (missingFields.length > 0) {
+            return res.status(400).json({
+                message: `Missing required customer details: ${missingFields.join(', ')}`
+            });
+        }
+
+        // Validate products array
+        if (!Array.isArray(products) || products.length === 0) {
+            return res.status(400).json({
+                message: 'Order must contain at least one product'
+            });
+        }
+
+        // Set default quantity if not provided
+        const processedProducts = products.map(product => ({
+            ...product,
+            quantity: product.quantity || 1
+        }));
+
+        const newOrder = new Order({
+            customerDetails,
+            products: processedProducts,
+            totalAmount,
+            farmer,
+            status: 'Pending'
+        });
+
         const order = await newOrder.save();
         res.status(201).json(order);
     } catch (error) {
-        res.status(500).json({ message: 'Server Error creating order' });
+        console.error('Order creation error:', error);
+        if (error.name === 'ValidationError') {
+            return res.status(400).json({
+                message: 'Validation error',
+                errors: Object.values(error.errors).map(err => err.message)
+            });
+        }
+        res.status(500).json({
+            message: 'Server Error creating order',
+            error: error.message
+        });
     }
 });
 
@@ -319,61 +367,86 @@ app.get('/api/orders/myorders/:customerName', async (req, res) => {
 });
 
 app.put('/api/orders/:orderId/status', async (req, res) => {
-  const { status } = req.body;
-  const { orderId } = req.params;
-
-  if (!['Pending', 'Shipped', 'Delivered'].includes(status)) {
-    return res.status(400).json({ message: 'Invalid status value.' });
-  }
-
   try {
+    const { status } = req.body;
+    const { orderId } = req.params;
+
+    // Validate status value
+    const validStatuses = ['Confirmed', 'Ready for Pickup', 'Completed'];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ 
+        message: `Invalid status value. Must be one of: ${validStatuses.join(', ')}`
+      });
+    }
+
+    // Find and update the order
     const order = await Order.findById(orderId);
     if (!order) {
       return res.status(404).json({ message: 'Order not found.' });
     }
 
+    // Update the order status
     order.status = status;
     await order.save();
 
-    if (!order.customerDetails || !order.customerDetails.email) {
-      console.log(`Email not sent: Order ${orderId} is missing a customer email address.`);
-      return res.json(order);
+    // Send email notification if email is available
+    if (order.customerDetails?.email) {
+      try {
+        const farmer = await User.findOne({ name: order.farmer });
+        const transporter = nodemailer.createTransport({
+          service: 'gmail',
+          auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS,
+          },
+        });
+
+        const statusMessages = {
+          'Confirmed': 'Your order has been confirmed and is being processed.',
+          'Ready for Pickup': 'Your order is ready for pickup! Please collect it at your convenience.',
+          'Completed': 'Thank you for collecting your order. We hope you enjoy your fresh produce!'
+        };
+
+        const mailOptions = {
+          from: `"AgriConnect" <${process.env.EMAIL_USER}>`,
+          to: order.customerDetails.email,
+          subject: `Your AgriConnect Order Status: ${status}`,
+          replyTo: farmer?.email,
+          html: `
+            <div style="font-family: Arial, sans-serif; padding: 20px;">
+              <h2>Order Status Update</h2>
+              <p>Hello ${order.customerDetails.name},</p>
+              <p>${statusMessages[status]}</p>
+              <p>Order ID: #${order._id.slice(-8).toUpperCase()}</p>
+              <p>Current Status: <strong>${status}</strong></p>
+              <p>Total Amount: ₹${order.totalAmount.toFixed(2)}</p>
+              <hr>
+              <p>If you have any questions, you can reply to this email to contact the farmer directly.</p>
+              <p>Thank you for using AgriConnect!</p>
+            </div>
+          `
+        };
+
+        await transporter.sendMail(mailOptions);
+        console.log('Status update email sent to:', order.customerDetails.email);
+      } catch (emailError) {
+        console.error("Failed to send status update email:", emailError);
+        // Continue with the response even if email fails
+      }
     }
 
-    const farmer = await User.findOne({ name: order.farmer });
-    if (!farmer || !farmer.email) {
-      console.error(`Could not find farmer or farmer's email for order ${orderId} to set Reply-To address.`);
-    }
-
-    try {
-      const transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS,
-        },
-      });
-
-      const mailOptions = {
-        from: `"FarmConnect" <${process.env.EMAIL_USER}>`,
-        to: order.customerDetails.email,
-        subject: `Your FarmConnect Order Status: ${status}`,
-        replyTo: farmer ? farmer.email : undefined,
-        html: `...`, // Your email HTML body
-      };
-
-      await transporter.sendMail(mailOptions);
-      console.log('Status update email sent to:', order.customerDetails.email);
-
-    } catch (emailError) {
-      console.error("Failed to send status update email:", emailError);
-    }
-
-    res.json(order);
+    // Send success response
+    res.json({ 
+      message: 'Order status updated successfully',
+      order 
+    });
 
   } catch (error) {
     console.error("Error updating order status:", error);
-    res.status(500).json({ message: 'Server error updating order status.' });
+    res.status(500).json({ 
+      message: 'Failed to update order status',
+      error: error.message 
+    });
   }
 });
 

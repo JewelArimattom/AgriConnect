@@ -10,9 +10,20 @@ const orderSchema = new mongoose.Schema({
       type: String, 
       required: true 
     },
-    address: { 
-      type: String, 
-      required: true 
+    phone: {
+      type: String,
+      required: true
+    },
+    preferredPickupTime: {
+      type: String
+    },
+    paymentMethod: {
+      type: String,
+      enum: ['online', 'pickup'],
+      default: 'pickup'
+    },
+    specialInstructions: {
+      type: String
     }
   },
   products: [{
@@ -40,8 +51,8 @@ const orderSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['Pending', 'Shipped', 'Delivered'],
-    default: 'Pending'
+    enum: ['Confirmed', 'Ready for Pickup', 'Completed'],
+    default: 'Confirmed'
   },
   farmer: { 
     type: String, 

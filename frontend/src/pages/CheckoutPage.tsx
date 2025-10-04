@@ -57,32 +57,45 @@ const CheckoutPage = () => {
     const farmerName = (cartItems[0] as any)?.farmer;
 
     try {
+      // Validate that we have items in cart
+      if (cartItems.length === 0) {
+        throw new Error("Your cart is empty");
+      }
+
+      // Validate all required fields
+      if (!formData.name || !formData.phone || !formData.email) {
+        throw new Error("Please fill in all required fields");
+      }
+
+      const orderData = {
+        customerDetails: {
+          name: formData.name,
+          phone: formData.phone,
+          email: formData.email,
+          preferredPickupTime: formData.preferredPickupTime || undefined,
+          paymentMethod: formData.paymentMethod,
+          specialInstructions: formData.specialInstructions || undefined,
+        },
+        products: cartItems.map((item: any) => ({
+          productId: item._id || item.id,
+          name: item.name,
+          price: item.price,
+          quantity: 1 // Add default quantity
+        })),
+        totalAmount: total,
+        farmer: farmerName,
+      };
+
       const response = await fetch("http://localhost:5000/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          customerDetails: {
-            name: formData.name,
-            phone: formData.phone,
-            email: formData.email,
-            preferredPickupTime: formData.preferredPickupTime,
-            paymentMethod: formData.paymentMethod,
-            specialInstructions: formData.specialInstructions,
-          },
-          products: cartItems.map((item: any) => ({
-            productId: item._id || item.id,
-            name: item.name,
-            price: item.price,
-          })),
-          totalAmount: total,
-          farmer: farmerName,
-          bookingType: "pickup", // Indicate this is a pickup booking
-        }),
+        body: JSON.stringify(orderData),
       });
 
+      const data = await response.json();
+      
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to place order.");
+        throw new Error(data.message || "Failed to place order.");
       }
 
       clearCart();
