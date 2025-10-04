@@ -188,10 +188,13 @@ const FarmerDashboard = () => {
                     </span>
                   </div>
                   <div className="flex space-x-2">
-                    <button className="flex-1 flex items-center justify-center space-x-2 bg-green-50 text-green-600 font-semibold py-2 px-4 rounded-lg hover:bg-green-100 transition-colors">
+                    <Link
+                      to={`/upload-product/${product._id}`}
+                      className="flex-1 flex items-center justify-center space-x-2 bg-green-50 text-green-600 font-semibold py-2 px-4 rounded-lg hover:bg-green-100 transition-colors"
+                    >
                       <HiPencil className="w-4 h-4" />
                       <span>Edit</span>
-                    </button>
+                    </Link>
                     <button
                       onClick={() => handleDeleteProduct(product._id)}
                       className="flex-1 flex items-center justify-center space-x-2 bg-red-50 text-red-600 font-semibold py-2 px-4 rounded-lg hover:bg-red-100 transition-colors"

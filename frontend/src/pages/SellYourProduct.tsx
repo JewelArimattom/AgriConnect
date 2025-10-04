@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../context/AuthenticationContext";
 import {
   HiCheckCircle,
@@ -15,13 +15,15 @@ const API_URL = "http://localhost:5000/api/products";
 const SellYourProduct = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { productId } = useParams();
+  const [isEditing, setIsEditing] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
     description: "",
     imageUrl: "",
     location: "",
-    category: "Produce",
+    category: "Vegetables",
     buyType: "direct_buy",
     price: "",
     startingBid: "",
@@ -30,6 +32,38 @@ const SellYourProduct = () => {
   });
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchProduct = async () => {
+      if (productId) {
+        setIsLoading(true);
+        setIsEditing(true);
+        try {
+          const response = await fetch(`http://localhost:5000/api/products/${productId}`);
+          if (!response.ok) throw new Error("Failed to fetch product");
+          const product = await response.json();
+          setFormData({
+            name: product.name || "",
+            description: product.description || "",
+            imageUrl: product.imageUrl || "",
+            location: product.location || "",
+            category: product.category || "Produce",
+            buyType: product.buyType || "direct_buy",
+            price: product.price || "",
+            startingBid: product.startingBid || "",
+            auctionStartTime: product.auctionStartTime || "",
+            auctionEndTime: product.auctionEndTime || "",
+          });
+        } catch (err: any) {
+          setError(err.message);
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    fetchProduct();
+  }, [productId]);
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -61,21 +95,42 @@ const SellYourProduct = () => {
     };
 
     try {
-      const response = await fetch(API_URL, {
-        method: "POST",
+      const url = productId ? `${API_URL}/${productId}` : API_URL;
+      const method = productId ? "PUT" : "POST";
+
+      // Validate required fields for auction type
+      if (payload.buyType === "auction") {
+        if (!payload.startingBid || !payload.auctionStartTime || !payload.auctionEndTime) {
+          throw new Error("For auction items, please provide starting bid and auction times.");
+        }
+      }
+
+      // Validate required fields for direct buy
+      if (payload.buyType === "direct_buy" && !payload.price) {
+        throw new Error("Please provide a price for direct buy items.");
+      }
+
+      const response = await fetch(url, {
+        method: method,
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || "Failed to submit product.");
+        let errorMessage = data.message;
+        if (data.errors && data.errors.length > 0) {
+          errorMessage += '\n• ' + data.errors.join('\n• ');
+        }
+        throw new Error(errorMessage || `Failed to ${productId ? 'update' : 'submit'} product.`);
       }
 
-      alert("Product submitted successfully!");
+      alert(`Product ${productId ? 'updated' : 'submitted'} successfully!`);
       navigate("/dashboard");
     } catch (err: any) {
-      setError(err.message);
+      console.error('Error submitting product:', err);
+      setError(err.message || 'An error occurred while saving the product. Please check all required fields.');
     } finally {
       setIsLoading(false);
     }
@@ -93,10 +148,10 @@ const SellYourProduct = () => {
             </span>
           </div>
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-3">
-            List a New Product
+            {isEditing ? 'Edit Product' : 'List a New Product'}
           </h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            Start selling your farm-fresh products directly to customers
+            {isEditing ? 'Update your product information' : 'Start selling your farm-fresh products directly to customers'}
           </p>
         </div>
 
@@ -370,7 +425,7 @@ const SellYourProduct = () => {
                 ) : (
                   <>
                     <HiCheckCircle className="w-6 h-6" />
-                    <span>List Product</span>
+                    <span>{isEditing ? 'Update Product' : 'List Product'}</span>
                   </>
                 )}
               </button>

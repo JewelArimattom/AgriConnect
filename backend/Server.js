@@ -93,14 +93,77 @@ app.post('/api/auth/login', async (req, res) => {
 app.post('/api/products', async (req, res) => {
   try {
     const productData = req.body;
-    if (productData.buyType === 'auction' && productData.startingBid) {
+    
+    // Validate required fields
+    const requiredFields = ['name', 'description', 'imageUrl', 'location', 'category', 'farmer', 'buyType'];
+    const missingFields = requiredFields.filter(field => !productData[field]);
+    
+    if (missingFields.length > 0) {
+      return res.status(400).json({ 
+        message: `Missing required fields: ${missingFields.join(', ')}`,
+        fields: missingFields
+      });
+    }
+
+    // Validate buyType specific fields
+    if (productData.buyType === 'direct_buy' && !productData.price) {
+      return res.status(400).json({ 
+        message: 'Price is required for direct buy products'
+      });
+    }
+
+    if (productData.buyType === 'auction') {
+      if (!productData.startingBid) {
+        return res.status(400).json({ 
+          message: 'Starting bid is required for auction products'
+        });
+      }
       productData.currentPrice = productData.startingBid;
     }
+
+    // Validate category
+    const validCategories = [
+      'Vegetables', 'Fruits', 'Grains & Pulses', 'Spices & Herbs',
+      'Dairy & Milk Products', 'Animal', 'Fertilizers', 'Seeds',
+      'Plants', 'Bio-Fertilizers', 'Homemade Foods',
+      'Farm Tools & Equipment', 'Dry Fruits & Nuts', 'Honey & Bee Products'
+    ];
+    
+    if (!validCategories.includes(productData.category)) {
+      return res.status(400).json({
+        message: `Invalid category. Must be one of: ${validCategories.join(', ')}`
+      });
+    }
+
+    // Validate buyType
+    const validBuyTypes = ['direct_buy', 'enquiry', 'auction'];
+    if (!validBuyTypes.includes(productData.buyType)) {
+      return res.status(400).json({
+        message: `Invalid buy type. Must be one of: ${validBuyTypes.join(', ')}`
+      });
+    }
+
     const newProduct = new Product(productData);
-    const product = await newProduct.save();
-    res.status(201).json(product);
+    
+    try {
+      const product = await newProduct.save();
+      res.status(201).json(product);
+    } catch (validationError) {
+      if (validationError.name === 'ValidationError') {
+        const errors = Object.values(validationError.errors).map(err => err.message);
+        return res.status(400).json({
+          message: 'Validation failed',
+          errors: errors
+        });
+      }
+      throw validationError;
+    }
   } catch (error) {
-    res.status(500).json({ message: 'Server error creating product' });
+    console.error('Product creation error:', error);
+    res.status(500).json({ 
+      message: 'Server error creating product',
+      error: error.message
+    });
   }
 });
 
