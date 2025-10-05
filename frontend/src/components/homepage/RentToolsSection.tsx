@@ -135,8 +135,8 @@ const RentToolsSection = () => {
             <div className="relative rounded-2xl overflow-hidden shadow-2xl">
               <img
                 className="w-full h-96 object-cover"
-                src="https://t4.ftcdn.net/jpg/06/41/88/33/360_F_641883382_1ED7kfd4Flhkl8PIhrSMUHGcISBCrmmG.jpg"
-                alt="Modern tractor in a field"
+                src="https://media.istockphoto.com/id/505022500/photo/green-tractor.jpg?s=612x612&w=0&k=20&c=81hNsPmJ8UhKMqyd2Gx1DHB4vIJISCBvidWwNWP2Gtw="
+                alt="Modern green tractor in a field"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent"></div>
             </div>

@@ -19,7 +19,7 @@ const ListToolModal = ({
 }) => {
   const [formData, setFormData] = useState({
     name: "",
-    category: "Tractors" as Tool["category"],
+    category: "Vehicles" as Tool["category"],
     imageUrl: "",
     pricePerDay: "",
     location: "",
@@ -90,10 +90,10 @@ const ListToolModal = ({
               required
               className="w-full p-4 border-2 border-gray-200 bg-white rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all"
             >
-              <option value="Tractors">Tractors</option>
-              <option value="Harvesting">Harvesting Equipment</option>
+              <option value="Vehicles">Vehicles</option>
+              <option value="Tools">Tools</option>
               <option value="Soil Preparation">Soil Preparation</option>
-              <option value="Seeding & Planting">Seeding & Planting</option>
+              <option value="power Tools">Power Tools</option>
             </select>
           </div>
 
@@ -169,19 +169,17 @@ const ListToolModal = ({
 };
 
 interface Tool {
-  _id: string; // Use _id to match MongoDB
+  _id: string;
   name: string;
-  category:
-    | "Tractors"
-    | "Harvesting"
-    | "Soil Preparation"
-    | "Seeding & Planting";
+  category: 'Vehicles' | 'Tools' | 'Soil Preparation' | 'power Tools';
   imageUrl: string;
   pricePerDay: number;
   location: string;
   available: boolean;
   description?: string;
   listedBy: { _id: string; name: string };
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 const RentToolsPage = () => {
@@ -400,7 +398,7 @@ const RentToolsPage = () => {
                         className="h-full w-full object-cover"
                         src={
                           tool.imageUrl ||
-                          "https://media.istockphoto.com/id/505022500/photo/green-tractor.jpg?s=612x612&w=0&k=20&c=81hNsPmJ8UhKMqyd2Gx1DHB4vIJISCBvidWwNWP2Gtw="
+                          "https://placehold.co/600x400/22c55e/FFFFFF?text=Tool+Image"
                         }
                         alt={tool.name}
                       />
