@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthenticationContext";
+import { API_BASE_URL } from "../utils/api";
 import {
   HiCheckCircle,
   HiClock,
@@ -40,7 +41,7 @@ const MyOrdersPage = () => {
       try {
         setLoading(true);
         const response = await fetch(
-          `http://localhost:5000/api/orders/myorders/${user.name}`
+          `${API_BASE_URL}/api/orders/myorders/${user.name}`
         );
         if (!response.ok) {
           throw new Error("Failed to fetch your orders.");

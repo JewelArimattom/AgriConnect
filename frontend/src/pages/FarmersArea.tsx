@@ -10,8 +10,6 @@ import {
   MapPin,
   DollarSign,
   BarChart3,
-  ShoppingCart,
-  Package,
   Sun,
   CloudRain,
   Cloud,
@@ -2253,8 +2251,6 @@ Ensure all fields are filled with detailed, practical information specific to ${
                           {price.description}
                         </p>
                       </div>
-
-                      
                     </div>
                   ))}
                 </div>

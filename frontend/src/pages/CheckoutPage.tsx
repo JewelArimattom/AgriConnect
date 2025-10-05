@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
+import { API_BASE_URL } from "../utils/api";
 import {
   HiCheckCircle,
   HiLocationMarker,
@@ -69,7 +70,7 @@ const CheckoutPage = () => {
 
       // Validate phone number format
       const phoneRegex = /^[0-9]{10}$/;
-      if (!phoneRegex.test(formData.phone.replace(/[^0-9]/g, ''))) {
+      if (!phoneRegex.test(formData.phone.replace(/[^0-9]/g, ""))) {
         throw new Error("Please enter a valid 10-digit phone number");
       }
 
@@ -83,35 +84,35 @@ const CheckoutPage = () => {
       const orderData = {
         customerDetails: {
           name: formData.name.trim(),
-          phone: formData.phone.replace(/[^0-9]/g, ''),
+          phone: formData.phone.replace(/[^0-9]/g, ""),
           email: formData.email.trim(),
-          preferredPickupTime: formData.preferredPickupTime || '',
+          preferredPickupTime: formData.preferredPickupTime || "",
           paymentMethod: formData.paymentMethod,
-          specialInstructions: formData.specialInstructions?.trim() || '',
+          specialInstructions: formData.specialInstructions?.trim() || "",
         },
         products: cartItems.map((item: any) => ({
           productId: item._id || item.id,
           name: item.name,
           price: item.price,
-          quantity: 1
+          quantity: 1,
         })),
         totalAmount: Number(total),
         farmer: farmerName,
-        status: 'Confirmed'
+        status: "Confirmed",
       };
 
-      console.log('Sending order data:', orderData); // Debug log
+      console.log("Sending order data:", orderData); // Debug log
 
-      const response = await fetch("http://localhost:5000/api/orders", {
+      const response = await fetch(`${API_BASE_URL}/api/orders`, {
         method: "POST",
-        headers: { 
-          "Content-Type": "application/json"
+        headers: {
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(orderData),
       });
 
       const data = await response.json();
-      
+
       if (!response.ok) {
         throw new Error(data.message || "Failed to place order.");
       }

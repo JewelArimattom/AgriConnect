@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
+import { API_BASE_URL } from "../utils/api";
 import {
   HiLocationMarker,
   HiCheckCircle,
@@ -36,9 +37,7 @@ const ToolDetailPage = () => {
   useEffect(() => {
     const fetchTool = async () => {
       try {
-        const response = await fetch(
-          `http://localhost:5000/api/tools/${toolId}`
-        );
+        const response = await fetch(`${API_BASE_URL}/api/tools/${toolId}`);
         if (!response.ok) throw new Error("Tool not found");
         const data = await response.json();
         setTool(data);

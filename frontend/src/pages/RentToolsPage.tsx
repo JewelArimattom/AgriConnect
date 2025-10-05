@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthenticationContext";
+import { API_BASE_URL } from "../utils/api";
 import {
   HiLocationMarker,
   HiCheckCircle,
@@ -171,7 +172,7 @@ const ListToolModal = ({
 interface Tool {
   _id: string;
   name: string;
-  category: 'Vehicles' | 'Tools' | 'Soil Preparation' | 'power Tools';
+  category: "Vehicles" | "Tools" | "Soil Preparation" | "power Tools";
   imageUrl: string;
   pricePerDay: number;
   location: string;
@@ -195,7 +196,7 @@ const RentToolsPage = () => {
   useEffect(() => {
     const fetchTools = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/tools");
+        const response = await fetch(`${API_BASE_URL}/api/tools`);
         if (!response.ok) throw new Error("Failed to fetch tools.");
         const data = await response.json();
         setTools(data);
@@ -222,7 +223,7 @@ const RentToolsPage = () => {
     }
     const payload = { ...newToolData, listedBy: user._id };
     try {
-      const response = await fetch("http://localhost:5000/api/tools", {
+      const response = await fetch(`${API_BASE_URL}/api/tools`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),

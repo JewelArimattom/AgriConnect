@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../context/AuthenticationContext";
+import { API_BASE_URL } from "../utils/api";
 import {
   HiCheckCircle,
   HiShoppingBag,
@@ -10,7 +11,7 @@ import {
 } from "react-icons/hi";
 import { FaLeaf, FaSeedling, FaTractor } from "react-icons/fa";
 
-const API_URL = "http://localhost:5000/api/products";
+const API_URL = `${API_BASE_URL}/api/products`;
 
 const SellYourProduct = () => {
   const navigate = useNavigate();
@@ -39,7 +40,9 @@ const SellYourProduct = () => {
         setIsLoading(true);
         setIsEditing(true);
         try {
-          const response = await fetch(`http://localhost:5000/api/products/${productId}`);
+          const response = await fetch(
+            `${API_BASE_URL}/api/products/${productId}`
+          );
           if (!response.ok) throw new Error("Failed to fetch product");
           const product = await response.json();
           setFormData({
@@ -100,8 +103,14 @@ const SellYourProduct = () => {
 
       // Validate required fields for auction type
       if (payload.buyType === "auction") {
-        if (!payload.startingBid || !payload.auctionStartTime || !payload.auctionEndTime) {
-          throw new Error("For auction items, please provide starting bid and auction times.");
+        if (
+          !payload.startingBid ||
+          !payload.auctionStartTime ||
+          !payload.auctionEndTime
+        ) {
+          throw new Error(
+            "For auction items, please provide starting bid and auction times."
+          );
         }
       }
 
@@ -121,16 +130,22 @@ const SellYourProduct = () => {
       if (!response.ok) {
         let errorMessage = data.message;
         if (data.errors && data.errors.length > 0) {
-          errorMessage += '\n• ' + data.errors.join('\n• ');
+          errorMessage += "\n• " + data.errors.join("\n• ");
         }
-        throw new Error(errorMessage || `Failed to ${productId ? 'update' : 'submit'} product.`);
+        throw new Error(
+          errorMessage ||
+            `Failed to ${productId ? "update" : "submit"} product.`
+        );
       }
 
-      alert(`Product ${productId ? 'updated' : 'submitted'} successfully!`);
+      alert(`Product ${productId ? "updated" : "submitted"} successfully!`);
       navigate("/dashboard");
     } catch (err: any) {
-      console.error('Error submitting product:', err);
-      setError(err.message || 'An error occurred while saving the product. Please check all required fields.');
+      console.error("Error submitting product:", err);
+      setError(
+        err.message ||
+          "An error occurred while saving the product. Please check all required fields."
+      );
     } finally {
       setIsLoading(false);
     }
@@ -148,10 +163,12 @@ const SellYourProduct = () => {
             </span>
           </div>
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-3">
-            {isEditing ? 'Edit Product' : 'List a New Product'}
+            {isEditing ? "Edit Product" : "List a New Product"}
           </h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-            {isEditing ? 'Update your product information' : 'Start selling your farm-fresh products directly to customers'}
+            {isEditing
+              ? "Update your product information"
+              : "Start selling your farm-fresh products directly to customers"}
           </p>
         </div>
 
@@ -266,16 +283,22 @@ const SellYourProduct = () => {
                   <option value="Fruits">Fruits</option>
                   <option value="Grains & Pulses">Grains & Pulses</option>
                   <option value="Spices & Herbs">Spices & Herbs</option>
-                  <option value="Dairy & Milk Products">Dairy & Milk Products</option>
+                  <option value="Dairy & Milk Products">
+                    Dairy & Milk Products
+                  </option>
                   <option value="Animal">Animal</option>
                   <option value="Fertilizers">Fertilizers</option>
                   <option value="Seeds">Seeds</option>
                   <option value="Plants">Plants</option>
                   <option value="Bio-Fertilizers">Bio-Fertilizers</option>
                   <option value="Homemade Foods">Homemade Foods</option>
-                  <option value="Farm Tools & Equipment">Farm Tools & Equipment</option>
+                  <option value="Farm Tools & Equipment">
+                    Farm Tools & Equipment
+                  </option>
                   <option value="Dry Fruits & Nuts">Dry Fruits & Nuts</option>
-                  <option value="Honey & Bee Products">Honey & Bee Products</option>
+                  <option value="Honey & Bee Products">
+                    Honey & Bee Products
+                  </option>
                 </select>
               </div>
             </div>
@@ -425,7 +448,7 @@ const SellYourProduct = () => {
                 ) : (
                   <>
                     <HiCheckCircle className="w-6 h-6" />
-                    <span>{isEditing ? 'Update Product' : 'List Product'}</span>
+                    <span>{isEditing ? "Update Product" : "List Product"}</span>
                   </>
                 )}
               </button>

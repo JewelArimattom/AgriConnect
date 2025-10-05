@@ -16,10 +16,10 @@ import { useState } from "react";
 const CartPage = () => {
   const { cartItems, removeFromCart, clearCart } = useCart();
   const [quantities, setQuantities] = useState<{ [key: string]: number }>(
-    cartItems.reduce((acc, item) => ({ ...acc, [item.id]: 1 }), {})
+    cartItems.reduce((acc, item) => ({ ...acc, [item._id]: 1 }), {})
   );
 
-  const updateQuantity = (id: string | number, change: number) => {
+  const updateQuantity = (id: string, change: number) => {
     setQuantities((prev) => ({
       ...prev,
       [id]: Math.max(1, (prev[id] || 1) + change),
@@ -28,7 +28,7 @@ const CartPage = () => {
 
   const subtotal = cartItems.reduce((total, item) => {
     const price = parseFloat(item.price.replace("₹", ""));
-    const quantity = quantities[item.id] || 1;
+    const quantity = quantities[item._id] || 1;
     return total + price * quantity;
   }, 0);
 
@@ -85,7 +85,7 @@ const CartPage = () => {
           <div className="lg:col-span-2 space-y-4">
             {cartItems.map((item) => (
               <div
-                key={item.id}
+                key={item._id}
                 className="bg-white rounded-2xl shadow-lg p-6 border-2 border-gray-100 hover:border-green-200 transition-all duration-300"
               >
                 <div className="flex flex-col sm:flex-row items-start sm:items-center gap-6">
@@ -106,7 +106,7 @@ const CartPage = () => {
                         </p>
                       </div>
                       <button
-                        onClick={() => removeFromCart(item.id)}
+                        onClick={() => removeFromCart(item._id)}
                         className="text-red-500 hover:text-red-700 p-2 hover:bg-red-50 rounded-lg transition-all duration-200"
                         title="Remove item"
                       >
@@ -122,16 +122,16 @@ const CartPage = () => {
                         </span>
                         <div className="flex items-center bg-gray-100 rounded-lg">
                           <button
-                            onClick={() => updateQuantity(item.id, -1)}
+                            onClick={() => updateQuantity(item._id, -1)}
                             className="p-2 hover:bg-gray-200 rounded-l-lg transition-colors"
                           >
                             <HiMinus className="w-4 h-4 text-gray-600" />
                           </button>
                           <span className="px-4 py-2 font-semibold text-gray-900">
-                            {quantities[item.id] || 1}
+                            {quantities[item._id] || 1}
                           </span>
                           <button
-                            onClick={() => updateQuantity(item.id, 1)}
+                            onClick={() => updateQuantity(item._id, 1)}
                             className="p-2 hover:bg-gray-200 rounded-r-lg transition-colors"
                           >
                             <HiPlus className="w-4 h-4 text-gray-600" />
@@ -149,7 +149,7 @@ const CartPage = () => {
                           Total: ₹
                           {(
                             parseFloat(item.price.replace("₹", "")) *
-                            (quantities[item.id] || 1)
+                            (quantities[item._id] || 1)
                           ).toFixed(2)}
                         </p>
                       </div>

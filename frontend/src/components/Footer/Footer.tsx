@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom";
 import {
   FaLeaf,
-  FaTractor,
   FaEnvelope,
   FaPhone,
   FaMapMarkerAlt,

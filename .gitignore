@@ -27,3 +27,5 @@ yarn-error.log*
 Thumbs.db
 /backend/.env
 /frontend/.env
+frontend/.env.development
+frontend/.env.production

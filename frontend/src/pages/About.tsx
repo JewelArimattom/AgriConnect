@@ -1,14 +1,7 @@
 import { Link } from "react-router-dom";
-import {
-  HiCheckCircle,
-  HiUsers,
-  HiLightningBolt,
-  HiShieldCheck,
-  HiHeart,
-  HiTrendingUp,
-} from "react-icons/hi";
+import { HiCheckCircle, HiUsers, HiHeart } from "react-icons/hi";
 import { FaLeaf, FaTractor, FaHandshake, FaSeedling } from "react-icons/fa";
-import { GiFarmer, GiPlantSeed } from "react-icons/gi";
+import { GiFarmer } from "react-icons/gi";
 
 const About = () => {
   const values = [

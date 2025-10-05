@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthenticationContext";
+import { API_BASE_URL } from "../utils/api";
 import {
   HiShoppingBag,
   HiClipboardList,
@@ -45,8 +46,8 @@ const FarmerDashboard = () => {
     setError("");
     try {
       const [productsResponse, ordersResponse] = await Promise.all([
-        fetch(`http://localhost:5000/api/dashboard/products/${user.name}`),
-        fetch(`http://localhost:5000/api/dashboard/orders/${user.name}`),
+        fetch(`${API_BASE_URL}/api/dashboard/products/${user.name}`),
+        fetch(`${API_BASE_URL}/api/dashboard/orders/${user.name}`),
       ]);
       if (!productsResponse.ok || !ordersResponse.ok) {
         throw new Error("Failed to fetch dashboard data.");
@@ -70,7 +71,7 @@ const FarmerDashboard = () => {
     if (window.confirm("Are you sure you want to delete this product?")) {
       try {
         const response = await fetch(
-          `http://localhost:5000/api/products/${productId}`,
+          `${API_BASE_URL}/api/products/${productId}`,
           {
             method: "DELETE",
           }
@@ -89,7 +90,7 @@ const FarmerDashboard = () => {
   ) => {
     try {
       const response = await fetch(
-        `http://localhost:5000/api/orders/${orderId}/status`,
+        `${API_BASE_URL}/api/orders/${orderId}/status`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },

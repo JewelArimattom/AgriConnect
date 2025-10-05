@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { API_BASE_URL } from "../../utils/api";
 import { HiClock, HiTrendingUp, HiFire, HiUsers } from "react-icons/hi";
 import { FaHammer } from "react-icons/fa";
 
@@ -24,7 +25,7 @@ const LiveAuction = () => {
   useEffect(() => {
     const fetchAuctionProducts = async () => {
       try {
-        const response = await fetch("http://localhost:5000/api/products");
+        const response = await fetch(`${API_BASE_URL}/api/products`);
         if (!response.ok) throw new Error("Failed to fetch products.");
         const data = await response.json();
         // Filter only auction products

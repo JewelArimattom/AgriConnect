@@ -1,6 +1,7 @@
 // AnimalProducts.tsx
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { API_BASE_URL } from "../../utils/api";
 import {
   GiMilkCarton,
   GiChicken,
@@ -80,9 +81,7 @@ const AnimalProducts = () => {
   useEffect(() => {
     const fetchAnimalProducts = async () => {
       try {
-        const response = await fetch(
-          "http://localhost:5000/api/animal-products"
-        );
+        const response = await fetch(`${API_BASE_URL}/api/animal-products`);
         if (!response.ok) throw new Error("Failed to fetch animal products.");
         const data = await response.json();
         setProducts(data.slice(0, 6));
