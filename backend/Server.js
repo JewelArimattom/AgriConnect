@@ -169,7 +169,7 @@ app.post('/api/products', async (req, res) => {
 
 app.get('/api/products', async (req, res) => {
   try {
-    const products = await Product.find({});
+    const products = await Product.find({}).limit(40);
     res.json(products);
   } catch (error) {
     res.status(500).json({ message: 'Server error fetching products' });
@@ -208,7 +208,7 @@ app.delete('/api/products/:id', async (req, res) => {
 
 app.get('/api/animal-products', async (req, res) => {
   try {
-    const animalProducts = await Product.find({ category: 'Animal Products' });
+    const animalProducts = await Product.find({ category: 'Animal Products' }).limit(40);
     res.json(animalProducts);
   } catch (error) {
     res.status(500).json({ message: 'Server error fetching animal products' });
@@ -486,7 +486,7 @@ app.get('/api/dashboard/orders/:farmerName', async (req, res) => {
 // --- TOOL RENTAL ROUTES ---
 app.get('/api/tools', async (req, res) => {
   try {
-    const tools = await Tool.find({}).populate('listedBy', 'name');
+    const tools = await Tool.find({}).populate('listedBy', 'name').limit(40);
     res.json(tools);
   } catch (error) {
     console.error("Error fetching tools:", error);

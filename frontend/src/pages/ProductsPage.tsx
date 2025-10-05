@@ -23,6 +23,8 @@ interface Product {
   price: string;
   inStock?: boolean; // Changed to optional
   organic: boolean;
+  buyType?: string;
+  currentPrice?: number;
 }
 
 interface PriceRange {
@@ -45,7 +47,7 @@ const ProductsPage = () => {
   const [error, setError] = useState("");
 
   // 2. Set a fixed higher max price for the filter
-  const maxPrice = 2000;
+  const maxPrice = 100000;
 
   const [filters, setFilters] = useState<FilterState>({
     category: "All",
@@ -67,6 +69,7 @@ const ProductsPage = () => {
           throw new Error("Failed to fetch products.");
         }
         const data: Product[] = await response.json();
+        console.log("Fetched products:", data);
         setProducts(data);
       } catch (err: any) {
         setError(err.message);
@@ -104,6 +107,7 @@ const ProductsPage = () => {
       );
     }
     filtered = filtered.filter((product) => {
+      if (!product.price) return true; // Include products without price (e.g., auctions)
       const price = parseFloat(product.price.replace("₹", ""));
       return price >= filters.priceRange.min && price <= filters.priceRange.max;
     });
@@ -121,18 +125,26 @@ const ProductsPage = () => {
     }
     switch (sortOrder) {
       case "price-asc":
-        filtered.sort(
-          (a, b) =>
-            parseFloat(a.price.replace("₹", "")) -
-            parseFloat(b.price.replace("₹", ""))
-        );
+        filtered.sort((a, b) => {
+          const aPrice = a.price
+            ? parseFloat(a.price.replace("₹", ""))
+            : a.currentPrice || 0;
+          const bPrice = b.price
+            ? parseFloat(b.price.replace("₹", ""))
+            : b.currentPrice || 0;
+          return aPrice - bPrice;
+        });
         break;
       case "price-desc":
-        filtered.sort(
-          (a, b) =>
-            parseFloat(b.price.replace("₹", "")) -
-            parseFloat(a.price.replace("₹", ""))
-        );
+        filtered.sort((a, b) => {
+          const aPrice = a.price
+            ? parseFloat(a.price.replace("₹", ""))
+            : a.currentPrice || 0;
+          const bPrice = b.price
+            ? parseFloat(b.price.replace("₹", ""))
+            : b.currentPrice || 0;
+          return bPrice - aPrice;
+        });
         break;
       case "name-asc":
         filtered.sort((a, b) => a.name.localeCompare(b.name));
@@ -435,8 +447,6 @@ const ProductsPage = () => {
                     </div>
                   </div>
 
-
-
                   <div className="space-y-4">
                     <label className="flex items-center space-x-3 cursor-pointer bg-gray-50 p-4 rounded-xl hover:bg-green-50 transition-all duration-200 border-2 border-transparent hover:border-green-200">
                       <input
@@ -512,7 +522,9 @@ const ProductsPage = () => {
                         <div className="flex items-center justify-between">
                           <p className="text-sm text-gray-600 flex items-center">
                             <FaTractor className="w-4 h-4 mr-2 text-green-600" />
-                            <span className="font-medium">{product.farmer}</span>
+                            <span className="font-medium">
+                              {product.farmer}
+                            </span>
                           </p>
                           <span className="text-xs bg-gray-100 px-3 py-1 rounded-full text-gray-600 font-semibold">
                             {product.category}
@@ -524,7 +536,10 @@ const ProductsPage = () => {
                             <span>{product.location}</span>
                           </p>
                           <p className="text-xl font-bold text-green-600">
-                            {product.price}
+                            {product.price ||
+                              (product.currentPrice
+                                ? `₹${product.currentPrice}`
+                                : "Contact for Price")}
                           </p>
                         </div>
                       </div>
