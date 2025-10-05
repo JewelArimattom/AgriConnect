@@ -2254,16 +2254,7 @@ Ensure all fields are filled with detailed, practical information specific to ${
                         </p>
                       </div>
 
-                      <div className="mt-4 flex space-x-3">
-                        <button className="flex-1 bg-green-600 text-white py-2 rounded-lg text-sm font-semibold hover:bg-green-700 transition-all flex items-center justify-center">
-                          <ShoppingCart className="w-4 h-4 mr-2" />
-                          Buy
-                        </button>
-                        <button className="flex-1 bg-orange-600 text-white py-2 rounded-lg text-sm font-semibold hover:bg-orange-700 transition-all flex items-center justify-center">
-                          <Package className="w-4 h-4 mr-2" />
-                          Sell
-                        </button>
-                      </div>
+                      
                     </div>
                   ))}
                 </div>

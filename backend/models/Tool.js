@@ -12,7 +12,7 @@ const toolSchema = new mongoose.Schema({
   category: {
     type: String,
     required: true,
-    enum: ['Tractors', 'Harvesting', 'Soil Preparation', 'Seeding & Planting']
+    enum: ['Vehicles', 'Tools', 'Soil Preparation', 'power Tools']
   },
   imageUrl: { 
     type: String 
