@@ -10,7 +10,7 @@ import {
   HiPhone,
   HiMail,
 } from "react-icons/hi";
-import { FaTractor, FaTools, FaMapMarkedAlt } from "react-icons/fa";
+import { FaTractor, FaTools } from "react-icons/fa";
 
 interface Tool {
   _id: string;
@@ -81,8 +81,6 @@ const ToolDetailPage = () => {
       </div>
     );
   }
-
-  const mapSrc = `http://googleusercontent.com/maps.google.com/5`;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-green-50">
@@ -237,34 +235,6 @@ const ToolDetailPage = () => {
                   </button>
                 )}
               </div>
-            </div>
-          </div>
-        </div>
-        {/* Map Section */}
-        <div className="mt-12">
-          <div className="bg-white rounded-2xl shadow-lg p-6 border-2 border-gray-100">
-            <div className="flex items-center space-x-3 mb-6">
-              <FaMapMarkedAlt className="w-6 h-6 text-green-600" />
-              <h2 className="text-2xl font-bold text-gray-900">
-                Equipment Location
-              </h2>
-            </div>
-            <div className="rounded-xl overflow-hidden shadow-md">
-              <iframe
-                src={mapSrc}
-                width="100%"
-                height="400"
-                style={{ border: 0 }}
-                allowFullScreen={true}
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-              />
-            </div>
-            <div className="mt-4 bg-blue-50 border-2 border-blue-200 rounded-xl p-4">
-              <p className="text-sm text-blue-800">
-                <strong>Pickup Location:</strong> {tool.location}. Contact the
-                owner to arrange a convenient pickup time.
-              </p>
             </div>
           </div>
         </div>
