@@ -81,10 +81,10 @@ const LatestCollection = () => {
     );
 
   return (
-    <div className="relative bg-gradient-to-br from-gray-50 via-green-50 to-emerald-50 py-20">
+    <div className="relative bg-gradient-to-br from-gray-50 via-green-50 to-emerald-50 py-20 overflow-hidden">
       {/* Decorative Elements */}
-      <div className="absolute top-0 right-0 w-64 h-64 bg-green-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
-      <div className="absolute bottom-0 left-0 w-64 h-64 bg-emerald-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
+      <div className="absolute top-0 right-4 w-64 h-64 bg-green-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
+      <div className="absolute bottom-0 left-4 w-64 h-64 bg-emerald-200 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-2000"></div>
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header Section */}

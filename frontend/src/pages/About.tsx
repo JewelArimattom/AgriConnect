@@ -89,8 +89,8 @@ const About = () => {
           />
           <div className="absolute inset-0 bg-gradient-to-br from-green-600/90 to-emerald-600/90"></div>
         </div>
-        <div className="absolute top-20 right-20 w-64 h-64 bg-white/10 rounded-full blur-3xl animate-blob"></div>
-        <div className="absolute bottom-20 left-20 w-96 h-96 bg-emerald-300/20 rounded-full blur-3xl animate-blob animation-delay-2000"></div>
+        <div className="absolute top-20 right-4 w-64 h-64 bg-white/10 rounded-full blur-3xl animate-blob"></div>
+        <div className="absolute bottom-20 left-4 w-80 h-80 md:w-96 md:h-96 bg-emerald-300/20 rounded-full blur-3xl animate-blob animation-delay-2000"></div>
 
         <div className="relative max-w-7xl mx-auto py-32 px-4 sm:py-40 sm:px-6 lg:px-8 text-center">
           <div className="inline-flex items-center space-x-2 bg-white/20 backdrop-blur-sm rounded-full px-6 py-2 mb-8">
